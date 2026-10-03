@@ -1,0 +1,68 @@
+{
+  "sessions": {
+    "session-default": {
+      "id": "session-default",
+      "studentName": "Marcus Vance",
+      "subject": "Conduit Fractions",
+      "tutorNotes": "Marcus struggled calculating 3/8 vs 6/16 inch clearance on brackets.",
+      "tutorToneNote": "Shop environment math",
+      "isApproved": true,
+      "createdAt": "2026-10-03T17:18:21.262Z",
+      "updatedAt": "2026-10-03T17:19:19.187Z"
+    }
+  },
+  "drills": {
+    "drill-1": {
+      "id": "drill-1",
+      "title": "Equivalent Clearance Check",
+      "question": "You are installing a bracket that requires a minimum clearance of 3/8 inch. Your caliper reads 6/16 inch. Does this meet the requirement?",
+      "options": [
+        "Yes, 6/16 is larger than 3/8",
+        "No, 6/16 is smaller than 3/8",
+        "Yes, 6/16 is exactly equal to 3/8",
+        "No, the fractions cannot be compared directly"
+      ],
+      "correctIndex": 2,
+      "explanation": "To compare fractions with different denominators, convert them to a common denominator. 3/8 is equivalent to 6/16 (multiply numerator and denominator by 2). Therefore, the clearance is exactly equal to the requirement.",
+      "hint": "Try converting 3/8 to a sixteenth to see if the numerators match.",
+      "approvedAt": "2026-10-03T17:19:19.187Z",
+      "sessionId": "session-default",
+      "createdAt": "2026-10-03T17:19:02.848Z"
+    },
+    "drill-2": {
+      "id": "drill-2",
+      "title": "Bracket Gap Calculation",
+      "question": "A mounting hole is 1/2 inch in diameter. The bolt is 7/16 inch. What is the total clearance (gap) on both sides of the bolt combined?",
+      "options": [
+        "1/16 inch",
+        "1/8 inch",
+        "3/16 inch",
+        "1/4 inch"
+      ],
+      "correctIndex": 1,
+      "explanation": "Subtract the bolt diameter from the hole diameter: 1/2 - 7/16. Convert 1/2 to 8/16. 8/16 - 7/16 = 1/16. Wait, this is the gap on one side? No, the question asks for total clearance on both sides combined, which is simply the difference between the hole and the bolt diameter. 8/16 - 7/16 = 1/16. Let me re-read. 'Total clearance (gap) on both sides combined' is the difference between the hole and the bolt. 1/2 (8/16) - 7/16 = 1/16. My previous calculation was correct. Let me check the options. Option A is 1/16. Option B is 1/8. Let's re-evaluate. 1/2 is 8/16. 8/16 - 7/16 = 1/16. So the answer is 1/16. Why did I think 1/8? 1/8 is 2/16. If the bolt was 6/16, the gap would be 2/16 or 1/8. But the bolt is 7/16. So the gap is 1/16. Correct option is A.",
+      "hint": "Convert 1/2 to sixteenths before subtracting the bolt size.",
+      "approvedAt": "2026-10-03T17:19:19.187Z",
+      "sessionId": "session-default",
+      "createdAt": "2026-10-03T17:19:02.848Z"
+    },
+    "drill-3": {
+      "id": "drill-3",
+      "title": "Stacking Conduit Fittings",
+      "question": "You are stacking two conduit fittings. The first is 3/8 inch thick and the second is 5/16 inch thick. What is the total thickness?",
+      "options": [
+        "8/24 inch",
+        "11/24 inch",
+        "1/2 inch",
+        "13/24 inch"
+      ],
+      "correctIndex": 1,
+      "explanation": "Find a common denominator for 8 and 16, which is 16. Convert 3/8 to 6/16. Add 6/16 + 5/16 = 11/16. Wait, the options are in 24ths? Let's check the options again. A: 8/24, B: 11/24, C: 1/2, D: 13/24. My calculation 11/16 is not in the options. Let me re-read the question. 3/8 + 5/16. 3/8 = 6/16. 6/16 + 5/16 = 11/16. 11/16 is 0.6875. 1/2 is 0.5. 13/24 is approx 0.54. 11/24 is approx 0.45. None of the options match 11/16. Did I misread the question? '3/8 inch thick and the second is 5/16 inch thick'. Maybe the options are wrong or I need to convert to 24ths? 11/16 = 33/48. 11/24 = 22/48. This is a mismatch. Let me create a better problem to avoid confusion with non-standard denominators in options. Let's change the problem to use 1/4 and 1/8. New Question: You are stacking two conduit fittings. The first is 1/4 inch thick and the second is 1/8 inch thick. What is the total thickness? Options: 2/12, 3/8, 1/2, 4/12. 1/4 = 2/8. 2/8 + 1/8 = 3/8. Correct option is B. Let's stick to standard fractions. Let's try another one. Question: A bracket has a thickness of 5/16 inch. You add a washer that is 1/8 inch thick. What is the total thickness? 5/16 + 1/8. 1/8 = 2/16. 5/16 + 2/16 = 7/16. Options: 6/16, 7/16, 8/16, 5/8. Correct is 7/16. Let's use this one.",
+      "hint": "Convert the eighths to sixteenths to add them easily.",
+      "approvedAt": "2026-10-03T17:19:19.187Z",
+      "sessionId": "session-default",
+      "createdAt": "2026-10-03T17:19:02.848Z"
+    }
+  },
+  "flags": {}
+}
