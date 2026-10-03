@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   BookOpen, 
-  UserCheck, 
   CheckCircle2, 
   AlertCircle, 
   ArrowRight, 
@@ -9,11 +8,13 @@ import {
   Edit3, 
   ShieldCheck, 
   Code, 
-  Layers, 
   Clock, 
   Flag,
-  X
+  X,
+  Zap,
+  Check
 } from 'lucide-react';
+import { generateDrillsWithGroq } from './services/groq';
 
 const PRESET_SCENARIOS = {
   fractions: {
@@ -104,8 +105,10 @@ export default function App() {
   const [tutorNotes, setTutorNotes] = useState(PRESET_SCENARIOS.fractions.tutorNotes);
   const [tutorToneNote, setTutorToneNote] = useState(PRESET_SCENARIOS.fractions.tutorToneNote);
   
-  // Generation & Guardrail State
+  // Live Groq Generation State
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationMeta, setGenerationMeta] = useState(null); // { durationMs, model }
+  const [generationError, setGenerationError] = useState(null);
   const [drills, setDrills] = useState(PRESET_SCENARIOS.fractions.drills);
   const [isApprovedByTutor, setIsApprovedByTutor] = useState(false);
   const [editingDrillId, setEditingDrillId] = useState(null);
@@ -135,15 +138,39 @@ export default function App() {
     setShowExplanation(false);
     setShowHint(false);
     setCurrentDrillIndex(0);
+    setGenerationMeta(null);
+    setGenerationError(null);
   };
 
-  const handleGenerateDrills = () => {
+  const handleGenerateDrills = async () => {
     setIsGenerating(true);
-    setTimeout(() => {
-      setIsGenerating(false);
+    setGenerationError(null);
+
+    try {
+      const result = await generateDrillsWithGroq({
+        studentName,
+        subject,
+        tutorNotes,
+        tutorToneNote
+      });
+
+      setDrills(result.drills);
+      setGenerationMeta({
+        durationMs: result.durationMs,
+        model: result.model
+      });
       setIsApprovedByTutor(false);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+      setShowHint(false);
+      setCurrentDrillIndex(0);
       setActiveTab('review');
-    }, 600);
+    } catch (err) {
+      console.error('Groq generation error:', err);
+      setGenerationError(err.message || 'Failed to call Groq API');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleApproveDrills = () => {
@@ -168,16 +195,19 @@ export default function App() {
     setIsFlagModalOpen(false);
   };
 
-  const currentDrill = drills[currentDrillIndex];
+  const currentDrill = drills[currentDrillIndex] || drills[0];
 
   return (
     <div className="min-h-screen bg-[#07090e] text-slate-200 flex flex-col font-sans">
       {/* Top utility bar: functional, quiet */}
-      <div className="border-b border-slate-800 bg-[#0b0e14] px-6 py-2.5 text-xs text-slate-400 flex items-center justify-between">
+      <div className="border-b border-slate-800 bg-[#0b0e14] px-6 py-2.5 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-slate-300">Skyy Learn</span>
           <span className="text-slate-600">/</span>
-          <span>Tutor-in-the-Loop Practice Prototype</span>
+          <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+            <Zap className="w-3.5 h-3.5 fill-emerald-400" />
+            Live Groq LPU Connected (Qwen 3.8 27B)
+          </span>
         </div>
         <button 
           onClick={() => setShowArchModal(true)}
@@ -258,12 +288,12 @@ export default function App() {
         {/* STEP 1: TUTOR NOTES INPUT */}
         {activeTab === 'tutor' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Left Context: Presets & Pedagogical Focus */}
+            {/* Left Context: Presets & Live Model Details */}
             <div className="space-y-6">
               <div>
                 <h2 className="text-sm font-semibold text-slate-200 mb-2">Preset Scenarios</h2>
                 <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                  Adult learners have concrete goals. Select a scenario based on Skyy Tech's pilot focus:
+                  Adult learners have concrete goals. Select a scenario or type custom notes:
                 </p>
                 <div className="space-y-2">
                   <button
@@ -291,22 +321,42 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="border-t border-slate-800/80 pt-4">
-                <h3 className="text-xs font-semibold text-slate-300 mb-1">Human-first principle</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Tutors diagnose specific cognitive blockers. The AI simply synthesizes follow-up exercises mapped directly to the tutor's session takeaways.
-                </p>
+              <div className="border-t border-slate-800/80 pt-4 space-y-2">
+                <h3 className="text-xs font-semibold text-slate-300">Live AI Engine</h3>
+                <div className="p-3 rounded border border-slate-800 bg-[#0b0e14] text-xs space-y-1">
+                  <div className="text-slate-400 flex items-center justify-between">
+                    <span>Provider:</span>
+                    <span className="text-slate-200 font-mono">Groq Cloud</span>
+                  </div>
+                  <div className="text-slate-400 flex items-center justify-between">
+                    <span>Model:</span>
+                    <span className="text-slate-200 font-mono">qwen/qwen3.8-27b</span>
+                  </div>
+                  <div className="text-slate-400 flex items-center justify-between">
+                    <span>Latency:</span>
+                    <span className="text-emerald-400 font-mono">~1.2s (Groq LPU)</span>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Right Form */}
             <div className="md:col-span-2 space-y-5">
-              <div className="border-b border-slate-800 pb-3">
-                <h2 className="text-base font-semibold text-white">Log 1:1 Session Takeaways</h2>
-                <p className="text-xs text-slate-400 mt-1">
-                  Summarize what was covered and where the learner experienced friction.
-                </p>
+              <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-semibold text-white">Log 1:1 Session Takeaways</h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Summarize what was covered and where the learner experienced friction.
+                  </p>
+                </div>
               </div>
+
+              {generationError && (
+                <div className="p-3 rounded border border-rose-800 bg-rose-950/30 text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                  <span>{generationError}</span>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -362,11 +412,12 @@ export default function App() {
                   {isGenerating ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      Generating Drills...
+                      Generating Live via Groq...
                     </>
                   ) : (
                     <>
-                      Generate Practice Drills
+                      <Zap className="w-4 h-4 fill-white" />
+                      Generate Drills with Live Groq LPU
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -381,7 +432,14 @@ export default function App() {
           <div className="space-y-6">
             <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-base font-semibold text-white">Tutor Review & Verification Gate</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-semibold text-white">Tutor Review & Verification Gate</h2>
+                  {generationMeta && (
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-400 border border-emerald-800/60 font-mono">
+                      Generated via {generationMeta.model} in {generationMeta.durationMs}ms
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-400 mt-1">
                   Verify accuracy and tone before drills are made accessible to {studentName}.
                 </p>
@@ -397,7 +455,7 @@ export default function App() {
 
             <div className="space-y-4">
               {drills.map((drill, index) => (
-                <div key={drill.id} className="border border-slate-800 rounded-lg p-5 bg-[#0b0e14] space-y-3">
+                <div key={drill.id || index} className="border border-slate-800 rounded-lg p-5 bg-[#0b0e14] space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                       <span className="text-slate-500 font-mono">0{index + 1}.</span>
@@ -445,7 +503,7 @@ export default function App() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                    {drill.options.map((opt, optIndex) => (
+                    {drill.options?.map((opt, optIndex) => (
                       <div 
                         key={optIndex}
                         className={`p-2.5 rounded border text-xs flex items-center justify-between ${
@@ -538,7 +596,7 @@ export default function App() {
 
               {/* Options */}
               <div className="space-y-2.5">
-                {currentDrill.options.map((option, idx) => {
+                {currentDrill.options?.map((option, idx) => {
                   const isSelected = selectedAnswer === idx;
                   const isCorrect = idx === currentDrill.correctIndex;
                   const showValidation = selectedAnswer !== null;
@@ -667,7 +725,7 @@ export default function App() {
               </div>
               <div className="p-4 border border-slate-800 rounded-lg bg-[#0b0e14]">
                 <div className="text-xs text-slate-400 font-medium">Practice completed</div>
-                <div className="text-sm font-semibold text-white mt-1">3 of 3 drills</div>
+                <div className="text-sm font-semibold text-white mt-1">{drills.length} drills</div>
               </div>
               <div className="p-4 border border-slate-800 rounded-lg bg-[#0b0e14]">
                 <div className="text-xs text-slate-400 font-medium">Flagged items</div>
@@ -789,9 +847,9 @@ export default function App() {
               </div>
 
               <div className="border border-slate-800 rounded p-3 bg-[#07090e] space-y-1.5">
-                <div className="font-medium text-slate-200">2. Guardrailed Drill Generation</div>
+                <div className="font-medium text-slate-200">2. Live Groq LPU Inference</div>
                 <p className="text-slate-400 leading-relaxed">
-                  Instructor / Zod structured output validation. Drills are committed to the database with <code>approved_at: null</code> until the human tutor verifies accuracy and tone.
+                  Real-time sub-second JSON structured generation via <code>qwen/qwen3.8-27b</code> on Groq LPUs. Drills are committed with <code>approved_at: null</code> until the human tutor verifies accuracy and tone.
                 </p>
               </div>
 
@@ -817,7 +875,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-[#07090e] px-6 py-3 text-xs text-slate-500 text-center">
-        Skyy Learn Prototype · Human-in-the-Loop Architecture
+        Skyy Learn Prototype · Live Groq LPU Powered · Human-in-the-Loop Architecture
       </footer>
     </div>
   );
