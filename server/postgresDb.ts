@@ -17,26 +17,38 @@ export class PostgresDatabase {
   }
 
   private initPool() {
+    const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
     const password = process.env.SUPABASE_DB_PASSWORD;
     const host = process.env.SUPABASE_DB_HOST || 'db.bturhosivfvyvanztkjb.supabase.co';
 
-    if (!password) {
-      console.warn('[PostgreSQL] No SUPABASE_DB_PASSWORD found. Running with file-backed DB fallback.');
+    if (!connectionString && !password) {
+      console.warn('[PostgreSQL] No NEON_DATABASE_URL, DATABASE_URL, or SUPABASE_DB_PASSWORD found. Running with file-backed DB fallback.');
       return;
     }
 
     try {
-      this.pool = new Pool({
-        host,
-        port: Number(process.env.SUPABASE_DB_PORT) || 5432,
-        user: process.env.SUPABASE_DB_USER || 'postgres',
-        password,
-        database: process.env.SUPABASE_DB_NAME || 'postgres',
-        ssl: { rejectUnauthorized: false },
-        max: 10,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 5000
-      });
+      if (connectionString) {
+        this.pool = new Pool({
+          connectionString,
+          ssl: { rejectUnauthorized: false },
+          max: 10,
+          idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 5000
+        });
+        console.log('[PostgreSQL] Initializing pool with connection string (Neon / Cloud Postgres)...');
+      } else {
+        this.pool = new Pool({
+          host,
+          port: Number(process.env.SUPABASE_DB_PORT) || 5432,
+          user: process.env.SUPABASE_DB_USER || 'postgres',
+          password,
+          database: process.env.SUPABASE_DB_NAME || 'postgres',
+          ssl: { rejectUnauthorized: false },
+          max: 10,
+          idleTimeoutMillis: 30000,
+          connectionTimeoutMillis: 5000
+        });
+      }
 
       // Quick test
       this.pool.query('SELECT NOW();')

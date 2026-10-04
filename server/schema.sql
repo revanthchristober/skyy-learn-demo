@@ -1,9 +1,21 @@
--- Skyy Learn PostgreSQL Database Schema (Supabase)
+-- Skyy Learn PostgreSQL Database Schema (Neon / Supabase compatible)
 -- Core tables: profiles (users), sessions, session_notes, drills, drill_attempts, flagged_topics
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. PROFILES (Extends Supabase auth.users)
+-- Ensure auth schema exists (for Neon / vanilla PostgreSQL compatibility)
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE TABLE IF NOT EXISTS auth.users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE,
+  encrypted_password TEXT,
+  email_confirmed_at TIMESTAMPTZ DEFAULT NOW(),
+  raw_user_meta_data JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 1. PROFILES (Extends auth.users)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL UNIQUE,

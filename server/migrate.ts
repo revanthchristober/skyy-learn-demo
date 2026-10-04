@@ -12,19 +12,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function runMigration() {
+  const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
   const dbPassword = process.env.SUPABASE_DB_PASSWORD || 'yCH2z+%_FxL#jU2';
-  const host = 'db.bturhosivfvyvanztkjb.supabase.co';
+  const host = process.env.SUPABASE_DB_HOST || 'db.bturhosivfvyvanztkjb.supabase.co';
 
-  console.log(`Connecting to Supabase PostgreSQL at ${host}...`);
+  console.log(`Connecting to PostgreSQL (${connectionString ? 'via Connection String / Neon' : host})...`);
 
-  const client = new Client({
-    host,
-    port: 5432,
-    user: 'postgres',
-    password: dbPassword,
-    database: 'postgres',
-    ssl: { rejectUnauthorized: false }
-  });
+  const client = connectionString
+    ? new Client({
+        connectionString,
+        ssl: { rejectUnauthorized: false }
+      })
+    : new Client({
+        host,
+        port: Number(process.env.SUPABASE_DB_PORT) || 5432,
+        user: process.env.SUPABASE_DB_USER || 'postgres',
+        password: dbPassword,
+        database: process.env.SUPABASE_DB_NAME || 'postgres',
+        ssl: { rejectUnauthorized: false }
+      });
 
   try {
     await client.connect();
