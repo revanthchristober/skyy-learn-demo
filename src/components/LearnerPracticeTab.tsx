@@ -57,7 +57,8 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
   };
 
   return (
-    <div>
+    <div className="desk p-3 sm:p-8">
+      <div key={currentDrillIndex} className="sheet sheet-in px-5 py-6 sm:px-10 sm:py-10">
       <p className="text-sm text-muted">
         {studentName}, {subject}
         <span className="ml-3 font-mono text-ink">
@@ -125,6 +126,7 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
           </button>
         )}
       </div>
+    </div>
     </div>
   );
 };

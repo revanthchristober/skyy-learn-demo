@@ -27,9 +27,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { user, activeRole, openAuthModal } = useAuth();
   const displayName = user ? user.fullName : 'Dakota Munro';
-
   return (
-    <aside className="border-b border-line bg-surface md:fixed md:inset-y-0 md:left-0 md:w-60 md:border-b-0 md:border-r md:flex md:flex-col">
+    <aside className="border-b border-line bg-surface md:w-60 md:shrink-0 md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r md:flex md:flex-col">
       <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-5">
         <span className="text-[17px] font-semibold tracking-tight text-ink">Skyy Learn</span>
         <button
@@ -63,9 +62,9 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <span>{step.label}</span>
-              {locked && <LockSimpleIcon size={14} />}
+              {locked && <LockSimpleIcon size={14} className="ml-2 shrink-0" />}
               {step.key === 'agenda' && flagCount > 0 && (
-                <span className="font-mono text-xs text-warn-ink">{flagCount}</span>
+                <span className="ml-2 font-mono text-xs text-warn-ink shrink-0">{flagCount}</span>
               )}
             </button>
           );

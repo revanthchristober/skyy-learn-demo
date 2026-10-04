@@ -74,24 +74,28 @@ export const TutorReviewTab: React.FC<TutorReviewTabProps> = ({
   }
 
   return (
-    <div>
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Review</h1>
-          <p className="mt-1 text-muted">
-            Check each answer key. {studentName} sees nothing until you approve.
-          </p>
-          {generationMeta && (
-            <p className="mt-2 font-mono text-[13px] text-muted">
-              {drills.length} questions, written in {(generationMeta.durationMs / 1000).toFixed(1)}s
-              {generationMeta.auditorModel ? ', answers re-solved by a second model' : ''}
+    <div className="desk p-3 sm:p-8">
+      <div className="sheet px-5 py-6 sm:px-10 sm:py-10">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-line pb-6">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-semibold text-ink">Review</h1>
+              <span className="tag tag-ok">{drills.length} questions</span>
+            </div>
+            <p className="mt-1 text-sm text-muted">
+              Check each answer key. {studentName} sees nothing until you approve.
             </p>
-          )}
+            {generationMeta && (
+              <p className="mt-2 font-mono text-[13px] text-muted">
+                {drills.length} questions, written in {(generationMeta.durationMs / 1000).toFixed(1)}s
+                {generationMeta.auditorModel ? ' · Answers re-solved by independent auditor' : ''}
+              </p>
+            )}
+          </div>
+          <button onClick={onApproveAll} disabled={isApproving} className="btn btn-primary shrink-0">
+            {isApproving ? 'Approving...' : 'Approve all'}
+          </button>
         </div>
-        <button onClick={onApproveAll} disabled={isApproving} className="btn btn-primary shrink-0">
-          {isApproving ? 'Approving...' : 'Approve all'}
-        </button>
-      </div>
 
       {flaggedCount > 0 && (
         <p className="notice notice-warn mt-6">
@@ -220,14 +224,15 @@ export const TutorReviewTab: React.FC<TutorReviewTabProps> = ({
         })}
       </ol>
 
-      <div className="mt-6 flex items-center justify-between">
-        <button onClick={onBackToNotes} className="btn btn-quiet">
-          <ArrowLeftIcon size={14} />
-          Session notes
-        </button>
-        <button onClick={onApproveAll} disabled={isApproving} className="btn btn-primary">
-          {isApproving ? 'Approving...' : 'Approve all'}
-        </button>
+        <div className="mt-8 flex items-center justify-between border-t border-line pt-6">
+          <button onClick={onBackToNotes} className="btn btn-quiet">
+            <ArrowLeftIcon size={14} />
+            Session notes
+          </button>
+          <button onClick={onApproveAll} disabled={isApproving} className="btn btn-primary">
+            {isApproving ? 'Approving...' : 'Approve all'}
+          </button>
+        </div>
       </div>
     </div>
   );

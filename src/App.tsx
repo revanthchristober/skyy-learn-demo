@@ -196,7 +196,7 @@ function SkyyLearnApp() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-canvas">
+    <div className="min-h-[100dvh] bg-canvas md:flex">
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -205,7 +205,8 @@ function SkyyLearnApp() {
         onOpenArchitecture={() => setIsArchModalOpen(true)}
       />
 
-      <main key={activeTab} className="view-in mx-auto w-full max-w-3xl px-5 py-8 md:ml-60 md:max-w-none md:px-12 md:py-12 [&>*]:max-w-3xl">
+      <main key={activeTab} className="view-in flex-1 min-w-0 px-5 py-8 md:px-10 md:py-10">
+        <div className={activeTab === 'tutor' ? 'max-w-5xl mx-auto' : 'max-w-3xl mx-auto'}>
         {activeTab === 'tutor' && (
           <TutorNotesTab
             selectedPreset={selectedPreset}
@@ -259,6 +260,7 @@ function SkyyLearnApp() {
             onReturnToPractice={() => setActiveTab('learner')}
           />
         )}
+        </div>
       </main>
 
       <FlagModal
