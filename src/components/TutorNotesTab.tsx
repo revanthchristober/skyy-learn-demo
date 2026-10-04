@@ -79,8 +79,12 @@ export const TutorNotesTab: React.FC<TutorNotesTabProps> = ({
               <span className="text-emerald-400 font-mono">Zod Strict Schemas</span>
             </div>
             <div className="text-slate-400 flex items-center justify-between">
-              <span>LLM Engine:</span>
+              <span>Generator Engine:</span>
               <span className="text-slate-200 font-mono">Groq LPU (Qwen 3.8)</span>
+            </div>
+            <div className="text-slate-400 flex items-center justify-between">
+              <span>Auditor Verifier:</span>
+              <span className="text-purple-300 font-mono">GPT-OSS 20B (Pass 2)</span>
             </div>
             <div className="text-slate-400 flex items-center justify-between">
               <span>Key Storage:</span>

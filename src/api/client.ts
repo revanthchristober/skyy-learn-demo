@@ -59,6 +59,35 @@ export async function approveAllDrillsAPI(): Promise<Drill[]> {
   return data.drills;
 }
 
+export async function acceptSuggestionAPI(id: string): Promise<Drill> {
+  const res = await fetch(`/api/drills/${id}/accept-suggestion`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Failed to accept suggestion');
+  }
+
+  return data.drill;
+}
+
+export async function dismissFlagAPI(id: string): Promise<Drill> {
+  const res = await fetch(`/api/drills/${id}/dismiss-flag`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Failed to dismiss flag');
+  }
+
+  return data.drill;
+}
+
+
 export async function fetchLearnerDrillsAPI(): Promise<{
   ready: boolean;
   message?: string;

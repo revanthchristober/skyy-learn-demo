@@ -42,17 +42,27 @@ export const ArchitectureModal: React.FC<ArchitectureModalProps> = ({
               2. Zod Schema Validation &amp; Server-Enforced Guardrails
             </div>
             <p className="text-slate-400 leading-relaxed">
-              Every Groq LLM completion is parsed against strict Zod schemas ensuring integer bounds on <code>correctIndex</code>, minimum option counts, and non-empty explanations. The learner API endpoint strictly rejects requests with HTTP 403 until the tutor explicitly signs off.
+              Every Groq LLM completion is parsed against strict Zod schemas ensuring integer bounds on <code>correctIndex</code>, distinct option choices, and non-empty explanations with self-correction feedback retries. The learner endpoint rejects requests with HTTP 403 until the tutor explicitly signs off.
+            </p>
+          </div>
+
+          <div className="border border-purple-900/40 rounded p-3.5 bg-purple-950/15 space-y-2">
+            <div className="font-semibold text-purple-300 flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-purple-400" />
+              3. Dual-Model Architecture: Independent Correctness Pass
+            </div>
+            <p className="text-slate-300 text-xs leading-relaxed">
+              To prevent answer-key hallucinations, a second, cheaper LLM (<code>openai/gpt-oss-20b</code>) acts as an automated auditor. It independently calculates each solution from scratch and verifies that <code>options[correctIndex]</code> is unequivocal. Any mathematical ambiguity or mismatched index is immediately flagged with auditor confidence and suggested corrections for human tutor sign-off.
             </p>
           </div>
 
           <div className="border border-slate-800 rounded p-3.5 bg-[#07090e] space-y-2">
             <div className="font-semibold text-slate-200 flex items-center gap-2">
               <Database className="w-4 h-4 text-sky-400" />
-              3. Relational Data Models &amp; Persistence
+              4. Relational Data Models &amp; Persistence
             </div>
             <p className="text-slate-400 leading-relaxed font-mono text-[11px]">
-              DBSession (tutor notes, approval status) · DBDrill (id, correctIndex, approvedAt) · DBFlaggedTopic (student note, queued agenda items). State persists to disk and survives server restarts and page refreshes.
+              DBSession (tutor notes, approval status) · DBDrill (id, correctIndex, audit status, approvedAt) · DBFlaggedTopic (student notes, agenda queue). State persists to disk and survives restarts and page refreshes.
             </p>
           </div>
 

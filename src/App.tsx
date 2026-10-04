@@ -5,7 +5,9 @@ import {
   generateDrillsAPI, 
   updateDrillAPI, 
   approveAllDrillsAPI, 
-  flagQuestionAPI 
+  flagQuestionAPI,
+  acceptSuggestionAPI,
+  dismissFlagAPI
 } from './api/client';
 import { Header } from './components/Header';
 import { TutorNotesTab } from './components/TutorNotesTab';
@@ -51,7 +53,10 @@ export default function App() {
   const [generationMeta, setGenerationMeta] = useState<{
     durationMs: number;
     model: string;
+    auditorModel?: string;
+    auditDurationMs?: number;
     attempts?: number;
+    flaggedCount?: number;
     retryLogs?: Array<{
       attempt: number;
       reason: string;
@@ -115,7 +120,10 @@ export default function App() {
       setGenerationMeta({
         durationMs: res.meta.durationMs,
         model: res.meta.model,
+        auditorModel: res.meta.auditorModel,
+        auditDurationMs: res.meta.auditDurationMs,
         attempts: res.meta.attempts,
+        flaggedCount: res.meta.flaggedCount,
         retryLogs: res.meta.retryLogs
       });
       setActiveTab('review');
@@ -127,12 +135,30 @@ export default function App() {
     }
   };
 
-  const handleUpdateDrill = async (id: string, updates: { question?: string; explanation?: string }) => {
+  const handleUpdateDrill = async (id: string, updates: { question?: string; explanation?: string; correctIndex?: number }) => {
     try {
       const updated = await updateDrillAPI(id, updates);
       setDrills(prev => prev.map(d => d.id === id ? { ...d, ...updated } : d));
     } catch (err) {
       console.error('Failed to update drill:', err);
+    }
+  };
+
+  const handleAcceptSuggestion = async (id: string) => {
+    try {
+      const updated = await acceptSuggestionAPI(id);
+      setDrills(prev => prev.map(d => d.id === id ? updated : d));
+    } catch (err) {
+      console.error('Failed to accept suggestion:', err);
+    }
+  };
+
+  const handleDismissFlag = async (id: string) => {
+    try {
+      const updated = await dismissFlagAPI(id);
+      setDrills(prev => prev.map(d => d.id === id ? updated : d));
+    } catch (err) {
+      console.error('Failed to dismiss flag:', err);
     }
   };
 
@@ -203,6 +229,8 @@ export default function App() {
             onUpdateDrill={handleUpdateDrill}
             onApproveAll={handleApproveAll}
             onBackToNotes={() => setActiveTab('tutor')}
+            onAcceptSuggestion={handleAcceptSuggestion}
+            onDismissFlag={handleDismissFlag}
             isApproving={isApproving}
           />
         )}

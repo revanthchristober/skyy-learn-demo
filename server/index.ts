@@ -5,6 +5,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import dotenv from 'dotenv';
 import { db } from './db';
 import { generateValidatedDrills } from './groq';
+import { auditDrillsWithCheaperLLM } from './verifier';
 import { GenerateRequestSchema, UpdateDrillSchema, FlagRequestSchema } from './schemas';
 
 // Load environment variables strictly into server process.env
@@ -82,18 +83,21 @@ app.post('/api/sessions/generate', async (c) => {
       isApproved: false
     });
 
-    // Call server-side Groq with Zod validation
-    const result = await generateValidatedDrills({
+    // 1. Call server-side Groq with Zod validation (Primary Generation: Qwen 3.8 27B)
+    const genResult = await generateValidatedDrills({
       studentName,
       subject,
       tutorNotes,
       tutorToneNote
     });
 
-    // Save to persistent DB with approvedAt: null (Locked state)
+    // 2. Call second, cheaper LLM for independent correctness pass (Auditor: GPT-OSS 20B)
+    const auditResult = await auditDrillsWithCheaperLLM(genResult.drills);
+
+    // 3. Save to persistent DB with approvedAt: null (Locked state) and attach audit metadata
     const createdDrills = db.setDrillsForSession(
       'session-default',
-      result.drills.map(d => ({
+      genResult.drills.map(d => ({
         id: d.id,
         title: d.title,
         question: d.question,
@@ -101,18 +105,25 @@ app.post('/api/sessions/generate', async (c) => {
         correctIndex: d.correctIndex,
         explanation: d.explanation,
         hint: d.hint,
-        approvedAt: null
+        approvedAt: null,
+        audit: auditResult.audits.get(d.id)
       }))
     );
+
+    const flaggedCount = createdDrills.filter(d => d.audit?.status === 'flagged').length;
 
     return c.json({
       success: true,
       drills: createdDrills,
       meta: {
-        durationMs: result.durationMs,
-        model: result.model,
-        attempts: result.attempts,
-        retryLogs: result.retryLogs
+        durationMs: genResult.durationMs + auditResult.durationMs,
+        genDurationMs: genResult.durationMs,
+        auditDurationMs: auditResult.durationMs,
+        model: genResult.model,
+        auditorModel: auditResult.auditorModel,
+        attempts: genResult.attempts,
+        retryLogs: genResult.retryLogs,
+        flaggedCount
       }
     });
   } catch (err: unknown) {
@@ -125,7 +136,7 @@ app.post('/api/sessions/generate', async (c) => {
   }
 });
 
-// Tutor edits a drill
+// Tutor edits a drill (can also update correctIndex)
 app.patch('/api/drills/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
@@ -139,6 +150,50 @@ app.patch('/api/drills/:id', async (c) => {
   if (!updated) {
     return c.json({ success: false, error: 'Drill not found' }, 404);
   }
+
+  return c.json({ success: true, drill: updated });
+});
+
+// Tutor accepts the auditor's suggested answer key correction
+app.post('/api/drills/:id/accept-suggestion', (c) => {
+  const id = c.req.param('id');
+  const drill = db.getDrills().find(d => d.id === id);
+  if (!drill) {
+    return c.json({ success: false, error: 'Drill not found' }, 404);
+  }
+
+  if (drill.audit?.suggestedCorrectIndex !== undefined && drill.audit?.suggestedCorrectIndex !== null) {
+    const updated = db.updateDrill(id, {
+      correctIndex: drill.audit.suggestedCorrectIndex,
+      audit: {
+        ...drill.audit,
+        status: 'verified',
+        confidence: 95,
+        reason: `Tutor accepted auditor correction: set option ${drill.audit.suggestedCorrectIndex} ("${drill.options[drill.audit.suggestedCorrectIndex]}") as correct answer.`
+      }
+    });
+    return c.json({ success: true, drill: updated });
+  }
+
+  return c.json({ success: false, error: 'No suggested index available' }, 400);
+});
+
+// Tutor dismisses an auditor flag (manual tutor override)
+app.post('/api/drills/:id/dismiss-flag', (c) => {
+  const id = c.req.param('id');
+  const drill = db.getDrills().find(d => d.id === id);
+  if (!drill) {
+    return c.json({ success: false, error: 'Drill not found' }, 404);
+  }
+
+  const updated = db.updateDrill(id, {
+    audit: drill.audit ? {
+      ...drill.audit,
+      status: 'verified',
+      confidence: 100,
+      reason: 'Flag manually reviewed and confirmed correct by human tutor.'
+    } : undefined
+  });
 
   return c.json({ success: true, drill: updated });
 });

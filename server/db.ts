@@ -7,6 +7,8 @@ const __dirname = path.dirname(__filename);
 const DATA_DIR = path.join(__dirname, 'data');
 const STORE_FILE = path.join(DATA_DIR, 'store.json');
 
+import { DrillAuditMeta } from './schemas';
+
 export interface DBDrill {
   id: string;
   sessionId: string;
@@ -18,6 +20,7 @@ export interface DBDrill {
   hint: string;
   approvedAt: string | null;
   createdAt: string;
+  audit?: DrillAuditMeta;
 }
 
 export interface DBFlaggedTopic {

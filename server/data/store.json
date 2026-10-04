@@ -6,62 +6,86 @@
       "subject": "Electrical Apprenticeship Math",
       "tutorNotes": "Marcus struggles with conduit fill calculations and converting mixed fractions of an inch to decimal values on job sites.",
       "tutorToneNote": "Practical trade electrician framing, no academic fluff",
-      "isApproved": true,
+      "isApproved": false,
       "createdAt": "2026-10-03T17:18:21.262Z",
-      "updatedAt": "2026-10-04T01:21:53.731Z"
+      "updatedAt": "2026-10-04T01:33:06.204Z"
     }
   },
   "drills": {
     "drill-1": {
       "id": "drill-1",
       "title": "Converting Mixed Fractions for Conduit Sizing",
-      "question": "You are sizing a conduit for a run that requires a clearance of 2 3/8 inches. To input this into your calculator for a volume calculation, what is the correct decimal equivalent?",
+      "question": "You are sizing a conduit for a 1/2-inch EMT run. The manufacturer's fill chart requires the cross-sectional area in square inches. If the inner diameter of the 1/2-inch EMT is actually 0.532 inches, what is the decimal equivalent of the mixed fraction 1 1/8 inches, which is the outer diameter often used for rough framing clearance checks?",
       "options": [
-        "2.38",
-        "2.375",
-        "2.83",
-        "2.30"
+        "1.125",
+        "1.083",
+        "1.120",
+        "1.250"
       ],
-      "correctIndex": 1,
-      "explanation": "To convert 2 3/8 inches to a decimal, keep the whole number (2) and convert the fraction 3/8. Since 1/8 = 0.125, then 3/8 = 0.375. Adding them together gives 2.375. A common error is treating the fraction as a percentage (2.38) or simply dropping the denominator, which leads to incorrect conduit fill calculations.",
-      "hint": "Remember that 1/8 is 0.125. Multiply that by the numerator (3) and add it to the whole number.",
-      "approvedAt": "2026-10-04T01:21:53.731Z",
+      "correctIndex": 0,
+      "explanation": "To convert 1 1/8 to a decimal, keep the whole number (1) and convert the fraction 1/8. Since 1 divided by 8 equals 0.125, the total is 1.125. Common errors include misreading 1/8 as 0.12 or confusing it with 1/4 (0.25).",
+      "hint": "Divide the numerator (1) by the denominator (8) and add the result to the whole number.",
+      "approvedAt": null,
+      "audit": {
+        "status": "verified",
+        "confidence": 95,
+        "auditorModel": "openai/gpt-oss-20b",
+        "reason": "Answer key verified. Option 0 accurately converts 1 1/8 to 1.125 with correct explanation.",
+        "suggestedCorrectIndex": null,
+        "verifiedAt": "2026-10-04T01:33:09.504Z"
+      },
       "sessionId": "session-default",
-      "createdAt": "2026-10-04T01:20:47.601Z"
+      "createdAt": "2026-10-04T01:33:09.504Z"
     },
     "drill-2": {
       "id": "drill-2",
-      "title": "Applying the 40% Fill Rule for Two Conductors",
-      "question": "You are installing two 12 AWG THHN conductors in a 1/2-inch EMT conduit. The cross-sectional area of one 12 AWG THHN conductor is 0.084 square inches. What is the maximum allowable total cross-sectional area of the conductors in this conduit?",
+      "title": "Conduit Fill Percentage Calculation",
+      "question": "You are pulling three 12 AWG THHN conductors into a 3/4-inch EMT conduit. The cross-sectional area of one 12 AWG THHN conductor is 0.084 square inches. The maximum allowable fill for more than two conductors is 40%. If the cross-sectional area of the 3/4-inch EMT is 0.533 square inches, what is the total area occupied by the three conductors?",
       "options": [
+        "0.252 sq in",
+        "0.213 sq in",
         "0.084 sq in",
-        "0.168 sq in",
-        "0.210 sq in",
-        "0.336 sq in"
+        "0.168 sq in"
       ],
-      "correctIndex": 2,
-      "explanation": "The internal cross-sectional area of 1/2-inch EMT is approximately 0.526 square inches. For two or more conductors, the National Electrical Code (NEC) limits the fill to 40% of the conduit's area. 40% of 0.526 is 0.2104 square inches. Therefore, the maximum allowable area is 0.210 sq in. The two conductors total 0.168 sq in (0.084 x 2), which is within the limit, but the question asks for the maximum allowable area of the conduit itself, not the sum of the specific wires.",
-      "hint": "First, find the total internal area of 1/2-inch EMT. Then, apply the 40% fill rule for multiple conductors.",
-      "approvedAt": "2026-10-04T01:21:53.731Z",
+      "correctIndex": 0,
+      "explanation": "The total area occupied is simply the sum of the individual conductor areas. 3 conductors x 0.084 sq in/conductor = 0.252 sq in. The 40% fill rule is used to check if this total is within the limit (0.40 x 0.533 = 0.213 sq in max allowed), but the question asks for the actual occupied area, not the maximum allowed.",
+      "hint": "Multiply the number of conductors by the area of a single conductor. Do not apply the percentage fill limit yet; that is for compliance checking.",
+      "approvedAt": null,
+      "audit": {
+        "status": "verified",
+        "confidence": 95,
+        "auditorModel": "openai/gpt-oss-20b",
+        "reason": "Answer key verified. Option 0 correctly sums three 0.084 sq in conductors to 0.252 sq in and explanation is accurate.",
+        "suggestedCorrectIndex": null,
+        "verifiedAt": "2026-10-04T01:33:09.504Z"
+      },
       "sessionId": "session-default",
-      "createdAt": "2026-10-04T01:20:47.601Z"
+      "createdAt": "2026-10-04T01:33:09.504Z"
     },
     "drill-3": {
       "id": "drill-3",
-      "title": "Decimal Conversion for Precision Measurement",
-      "question": "A job spec calls for a standoff distance of 1 5/16 inches. You need to enter this value into a CAD software that only accepts decimals. What is the correct decimal value?",
+      "title": "Checking Conduit Fill Compliance",
+      "question": "Using the data from the previous problem: 3/4-inch EMT has a cross-sectional area of 0.533 sq in. You are installing four 10 AWG THHN conductors, each with an area of 0.102 sq in. What is the total area of the conductors, and does it exceed the 40% fill limit?",
       "options": [
-        "1.5625",
-        "1.3125",
-        "1.625",
-        "1.50"
+        "Total: 0.408 sq in; Exceeds limit (Max allowed: 0.213 sq in)",
+        "Total: 0.408 sq in; Within limit (Max allowed: 0.213 sq in)",
+        "Total: 0.102 sq in; Within limit (Max allowed: 0.213 sq in)",
+        "Total: 0.204 sq in; Exceeds limit (Max allowed: 0.213 sq in)"
       ],
       "correctIndex": 0,
-      "explanation": "To convert 1 5/16 inches to a decimal, keep the whole number (1) and convert the fraction 5/16. Since 1/16 = 0.0625, then 5/16 = 0.3125. Adding them together gives 1.3125. Wait, let me re-calculate. 1/16 is 0.0625. 5 * 0.0625 = 0.3125. 1 + 0.3125 = 1.3125. Let me check the options again. Option A is 1.5625, Option B is 1.3125. My calculation is 1.3125. Let me re-read the question. 1 5/16. 5/16 = 0.3125. 1.3125. So the correct option is B. I made a mistake in the initial thought process. Let's fix the correctIndex. The correct answer is 1.3125, which is index 1.",
-      "hint": "Divide the numerator (5) by the denominator (16) to get the decimal part, then add the whole number.",
-      "approvedAt": "2026-10-04T01:21:53.731Z",
+      "explanation": "First, calculate total conductor area: 4 x 0.102 = 0.408 sq in. Next, calculate the maximum allowed fill: 40% of 0.533 = 0.2132 sq in. Since 0.408 > 0.213, the fill exceeds the limit. This is a common job site error where electricians forget to check the percentage against the conduit's total area.",
+      "hint": "Calculate the sum of the conductor areas first. Then, calculate 40% of the conduit's area to find the maximum allowed. Compare the two values.",
+      "approvedAt": null,
+      "audit": {
+        "status": "verified",
+        "confidence": 95,
+        "auditorModel": "openai/gpt-oss-20b",
+        "reason": "Tutor accepted auditor correction: set option 0 (\"Total: 0.408 sq in; Exceeds limit (Max allowed: 0.213 sq in)\") as correct answer.",
+        "suggestedCorrectIndex": 0,
+        "verifiedAt": "2026-10-04T01:34:00.000Z"
+      },
       "sessionId": "session-default",
-      "createdAt": "2026-10-04T01:20:47.601Z"
+      "createdAt": "2026-10-04T01:33:09.504Z"
     }
   },
   "flags": {}

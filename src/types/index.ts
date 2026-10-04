@@ -1,3 +1,12 @@
+export interface DrillAuditMeta {
+  status: 'verified' | 'flagged';
+  confidence: number;
+  auditorModel: string;
+  reason: string;
+  suggestedCorrectIndex?: number | null;
+  verifiedAt: string;
+}
+
 export interface Drill {
   id: string;
   title: string;
@@ -7,6 +16,7 @@ export interface Drill {
   explanation: string;
   hint: string;
   approvedAt: string | null;
+  audit?: DrillAuditMeta;
 }
 
 export interface FlaggedTopic {
@@ -45,7 +55,11 @@ export interface GenerationResponse {
   meta: {
     durationMs: number;
     model: string;
+    auditorModel?: string;
+    genDurationMs?: number;
+    auditDurationMs?: number;
     attempts?: number;
+    flaggedCount?: number;
     retryLogs?: Array<{
       attempt: number;
       reason: string;

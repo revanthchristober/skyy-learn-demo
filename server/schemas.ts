@@ -105,10 +105,34 @@ export const GenerateRequestSchema = z.object({
   tutorToneNote: z.string().optional().default("Keep grounded in practical adult contexts")
 });
 
+// Verification / Auditor Schemas (LLM Correctness Pass)
+export const DrillVerificationItemSchema = z.object({
+  drillId: z.string().min(1),
+  verdict: z.enum(['verified', 'flagged']),
+  confidence: z.number().min(0).max(100),
+  reason: z.string().min(5),
+  suggestedCorrectIndex: z.number().int().min(0).optional().nullable()
+});
+
+export const BatchVerificationOutputSchema = z.object({
+  verifications: z.array(DrillVerificationItemSchema).min(1)
+});
+
+export const DrillAuditMetaSchema = z.object({
+  status: z.enum(['verified', 'flagged']),
+  confidence: z.number().min(0).max(100),
+  auditorModel: z.string(),
+  reason: z.string(),
+  suggestedCorrectIndex: z.number().int().min(0).optional().nullable(),
+  verifiedAt: z.string()
+});
+
 export const UpdateDrillSchema = z.object({
   question: z.string().min(3).optional(),
   explanation: z.string().min(3).optional(),
-  hint: z.string().min(3).optional()
+  hint: z.string().min(3).optional(),
+  correctIndex: z.number().int().min(0).optional(),
+  audit: DrillAuditMetaSchema.optional()
 });
 
 export const FlagRequestSchema = z.object({
@@ -120,3 +144,7 @@ export const FlagRequestSchema = z.object({
 export type RawDrill = z.infer<typeof RawDrillSchema>;
 export type GroqOutput = z.infer<typeof GroqOutputSchema>;
 export type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
+export type DrillVerificationItem = z.infer<typeof DrillVerificationItemSchema>;
+export type BatchVerificationOutput = z.infer<typeof BatchVerificationOutputSchema>;
+export type DrillAuditMeta = z.infer<typeof DrillAuditMetaSchema>;
+
