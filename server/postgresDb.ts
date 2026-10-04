@@ -293,23 +293,32 @@ export class PostgresDatabase {
   }
 
   async addFlag(sessionId: string, drillId: string, question: string, studentNote: string): Promise<DBFlaggedTopic> {
-    const flag = fileDb.addFlag('session-default', drillId, question, studentNote);
+    const fileFlag = fileDb.addFlag('session-default', drillId, question, studentNote);
 
     if (!this.pool || !this.isConnected) {
-      return flag;
+      return fileFlag;
     }
 
     try {
-      await this.pool.query(
-        `INSERT INTO public.flagged_topics (id, session_id, drill_id, question, student_note, status)
-         VALUES ($1, $2, $3, $4, $5, 'pending');`,
-        [flag.id, '00000000-0000-0000-0000-000000000001', drillId, question, studentNote]
+      const res = await this.pool.query(
+        `INSERT INTO public.flagged_topics (session_id, drill_id, question, student_note, status)
+         VALUES ($1, $2, $3, $4, 'pending')
+         RETURNING id, session_id, drill_id, question, student_note, created_at;`,
+        ['00000000-0000-0000-0000-000000000001', drillId, question, studentNote]
       );
+      const row = res.rows[0];
+      return {
+        id: row.id,
+        sessionId: row.session_id,
+        drillId: row.drill_id,
+        question: row.question,
+        studentNote: row.student_note,
+        timestamp: row.created_at ? new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'
+      };
     } catch (err) {
       console.warn('[Postgres addFlag Error]:', err);
+      return fileFlag;
     }
-
-    return flag;
   }
 
   async getFlags(sessionId: string = '00000000-0000-0000-0000-000000000001'): Promise<DBFlaggedTopic[]> {
