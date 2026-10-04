@@ -196,7 +196,7 @@ function SkyyLearnApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-[100dvh] bg-canvas">
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -205,7 +205,7 @@ function SkyyLearnApp() {
         onOpenArchitecture={() => setIsArchModalOpen(true)}
       />
 
-      <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex-1 flex flex-col gap-6">
+      <main key={activeTab} className="view-in mx-auto w-full max-w-3xl px-5 py-8 md:ml-60 md:max-w-none md:px-12 md:py-12 [&>*]:max-w-3xl">
         {activeTab === 'tutor' && (
           <TutorNotesTab
             selectedPreset={selectedPreset}
@@ -274,21 +274,6 @@ function SkyyLearnApp() {
 
       <AuthModal />
 
-      <footer className="border-t border-slate-800/80 bg-[#0d1322] px-6 py-4 text-xs text-slate-500">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-400">Skyy Learn</span>
-            <span>·</span>
-            <span>Human guidance at the center. AI practice between sessions.</span>
-          </div>
-          <button 
-            onClick={() => setIsArchModalOpen(true)} 
-            className="text-indigo-400 hover:text-indigo-300 transition underline underline-offset-4"
-          >
-            System Architecture &amp; Stack Blueprint
-          </button>
-        </div>
-      </footer>
     </div>
   );
 }

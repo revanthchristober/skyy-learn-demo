@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flag, X, HelpCircle } from 'lucide-react';
+import { XIcon } from '@phosphor-icons/react';
 
 interface FlagModalProps {
   isOpen: boolean;
@@ -27,57 +27,30 @@ export const FlagModal: React.FC<FlagModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#131b2e] border border-slate-800/80 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/60 transition"
-        >
-          <X className="w-4 h-4" />
+    <div className="scrim" role="dialog" aria-modal="true" aria-labelledby="flag-title">
+      <div className="dialog max-w-md">
+        <button onClick={onClose} aria-label="Close" className="btn btn-quiet absolute right-3 top-3 !px-2">
+          <XIcon size={14} />
         </button>
 
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-            <Flag className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-white">
-              Flag for Next 1:1 Session
-            </h3>
-            <p className="text-xs text-slate-400">
-              Queue this question for your tutor to walk through live
-            </p>
-          </div>
-        </div>
+        <h2 id="flag-title" className="text-lg font-semibold">Ask your tutor</h2>
+        <p className="mt-1 text-muted">This goes on the list for your next session.</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300">
-              What part felt confusing?
-            </label>
-            <textarea
-              rows={3}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. I got confused comparing 3/8 against 16ths in the bracket measurement..."
-              className="w-full bg-[#0d1322] border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none leading-relaxed transition"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-2.5 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-3.5 py-2 text-xs text-slate-400 hover:text-white transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-xl text-xs font-semibold transition shadow-md shadow-indigo-600/20 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Saving to Agenda...' : 'Save to Agenda'}
+        <form onSubmit={handleSubmit} className="mt-5">
+          <label htmlFor="flag-note" className="field-label">What was confusing?</label>
+          <textarea
+            id="flag-note"
+            rows={3}
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="I could not tell how 3/8 compares to 16ths."
+            className="input leading-relaxed"
+            autoFocus
+          />
+          <div className="mt-5 flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="btn btn-quiet">Cancel</button>
+            <button type="submit" disabled={isSubmitting} className="btn btn-primary">
+              {isSubmitting ? 'Saving...' : 'Save'}
             </button>
           </div>
         </form>
