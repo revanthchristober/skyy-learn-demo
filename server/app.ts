@@ -16,10 +16,10 @@ dotenv.config();
 export function createApp() {
   const app = new Hono();
 
-  // Security Headers & CORS (from Context7 Hono best practices)
+  // Security Headers & CORS across all routes
   app.use('*', secureHeaders());
-  app.use('/api/*', cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  app.use('*', cors({
+    origin: (origin) => origin || '*',
     allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
     maxAge: 600,
@@ -34,8 +34,10 @@ export function createApp() {
     console.log(`[API] ${c.req.method} ${c.req.path} -> ${c.res.status} (${ms}ms)`);
   });
 
+  const api = new Hono();
+
   // Health check
-  app.get('/api/health', (c) => {
+  api.get('/health', (c) => {
     return c.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -53,7 +55,7 @@ export function createApp() {
   });
 
   // Get active session
-  app.get('/api/session', async (c) => {
+  api.get('/session', async (c) => {
     const session = await db.getSession();
     const drills = await db.getDrills();
     const flags = await db.getFlags();
@@ -66,7 +68,7 @@ export function createApp() {
   });
 
   // Generate drills (Tutor Action: Calls server-side Groq LPU + Auditor pass)
-  app.post('/api/sessions/generate', async (c) => {
+  api.post('/sessions/generate', async (c) => {
     try {
       const body = await c.req.json();
       const parsed = GenerateRequestSchema.safeParse(body);
@@ -144,7 +146,7 @@ export function createApp() {
   });
 
   // Tutor edits a drill (can also update correctIndex)
-  app.patch('/api/drills/:id', async (c) => {
+  api.patch('/drills/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json();
     const parsed = UpdateDrillSchema.safeParse(body);
@@ -162,7 +164,7 @@ export function createApp() {
   });
 
   // Tutor accepts the auditor's suggested answer key correction
-  app.post('/api/drills/:id/accept-suggestion', async (c) => {
+  api.post('/drills/:id/accept-suggestion', async (c) => {
     const id = c.req.param('id');
     const drills = await db.getDrills();
     const drill = drills.find(d => d.id === id);
@@ -187,7 +189,7 @@ export function createApp() {
   });
 
   // Tutor dismisses an auditor flag (manual tutor override)
-  app.post('/api/drills/:id/dismiss-flag', async (c) => {
+  api.post('/drills/:id/dismiss-flag', async (c) => {
     const id = c.req.param('id');
     const drills = await db.getDrills();
     const drill = drills.find(d => d.id === id);
@@ -208,7 +210,7 @@ export function createApp() {
   });
 
   // Tutor Approves All Drills (The Core Guardrail)
-  app.post('/api/drills/approve-all', async (c) => {
+  api.post('/drills/approve-all', async (c) => {
     const drills = await db.approveAllDrills('00000000-0000-0000-0000-000000000001');
 
     // Realtime push: immediately notify connected learner clients
@@ -230,7 +232,7 @@ export function createApp() {
   });
 
   // Learner Endpoint (GATED BY SERVER: Only approved drills returned!)
-  app.get('/api/learner/drills', async (c) => {
+  api.get('/learner/drills', async (c) => {
     const session = await db.getSession('00000000-0000-0000-0000-000000000001');
     if (!session.isApproved) {
       return c.json({
@@ -250,7 +252,7 @@ export function createApp() {
   });
 
   // Learner Flags a Question for Next Session
-  app.post('/api/learner/flag', async (c) => {
+  api.post('/learner/flag', async (c) => {
     const body = await c.req.json();
     const parsed = FlagRequestSchema.safeParse(body);
 
@@ -283,7 +285,7 @@ export function createApp() {
   });
 
   // Learner Records Practice Attempt (persisted to public.drill_attempts)
-  app.post('/api/learner/attempt', async (c) => {
+  api.post('/learner/attempt', async (c) => {
     const body = await c.req.json();
     const parsed = RecordAttemptSchema.safeParse(body);
 
@@ -307,14 +309,14 @@ export function createApp() {
   });
 
   // Get attempts for a drill or session
-  app.get('/api/learner/attempts', async (c) => {
+  api.get('/learner/attempts', async (c) => {
     const drillId = c.req.query('drillId');
     const attempts = await db.getAttempts(drillId);
     return c.json({ success: true, attempts });
   });
 
   // Next Session Agenda Aggregation
-  app.get('/api/agenda', async (c) => {
+  api.get('/agenda', async (c) => {
     const session = await db.getSession('00000000-0000-0000-0000-000000000001');
     const drills = await db.getDrills('00000000-0000-0000-0000-000000000001');
     const flags = await db.getFlags('00000000-0000-0000-0000-000000000001');
@@ -327,7 +329,7 @@ export function createApp() {
   });
 
   // Supabase Auth: Sign Up (Zero-friction auto-confirmed registration)
-  app.post('/api/auth/signup', async (c) => {
+  api.post('/auth/signup', async (c) => {
     try {
       const { email, password, fullName, role } = await c.req.json();
       if (!email || !password) {
@@ -357,7 +359,7 @@ export function createApp() {
   });
 
   // Supabase Auth: Sign In
-  app.post('/api/auth/signin', async (c) => {
+  api.post('/auth/signin', async (c) => {
     try {
       const { email, password } = await c.req.json();
       const { data, error } = await supabaseServer.auth.signInWithPassword({
@@ -374,7 +376,7 @@ export function createApp() {
   });
 
   // Supabase Auth: Current User Verification
-  app.get('/api/auth/me', async (c) => {
+  api.get('/auth/me', async (c) => {
     const authHeader = c.req.header('Authorization');
     if (!authHeader) {
       return c.json({ authenticated: false, user: null }, 401);
@@ -391,7 +393,7 @@ export function createApp() {
   });
 
   // Realtime WebSocket Status
-  app.get('/api/realtime/status', (c) => {
+  api.get('/realtime/status', (c) => {
     const instance = getRealtimeInstance();
     return c.json({
       status: 'active',
@@ -399,6 +401,10 @@ export function createApp() {
       clients: instance ? instance.getClientCount() : 0
     });
   });
+
+  // Mount API router to both /api prefix and root / (handles both direct and Vercel stripped routing)
+  app.route('/api', api);
+  app.route('/', api);
 
   return app;
 }

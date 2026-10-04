@@ -4,63 +4,43 @@
       "id": "session-default",
       "studentName": "Marcus Vance",
       "subject": "Fractions & Proportions",
-      "tutorNotes": "Marcus grasps basic division, but got stuck calculating conduit fractions (comparing 3/8\" vs 6/16\"). Confuses cross-multiplication with reciprocal division.",
-      "tutorToneNote": "Keep practice grounded in shop measurements. Do not use pizza or pie metaphors.",
+      "tutorNotes": "Marcus struggles with conduit fill calculations and converting mixed fractions of an inch to decimal values on job sites.",
+      "tutorToneNote": "Practical trade electrician framing, no academic fluff",
       "isApproved": true,
       "createdAt": "2026-10-03T17:18:21.262Z",
-      "updatedAt": "2026-10-04T01:59:23.473Z"
+      "updatedAt": "2026-10-04T17:20:40.531Z"
     }
   },
   "drills": {
-    "drill-1": {
-      "id": "drill-1",
-      "title": "Conduit Size Equivalence",
-      "question": "You are cutting a piece of EMT conduit and need to verify if a 6/16-inch section is the same length as a 3/8-inch section. Which statement correctly describes the relationship between these two measurements?",
+    "d-test-1": {
+      "id": "d-test-1",
+      "title": "T1",
+      "question": "Q1?",
       "options": [
-        "6/16 is larger than 3/8 because 6 is greater than 3.",
-        "6/16 is smaller than 3/8 because 16 is greater than 8.",
-        "6/16 is exactly equal to 3/8.",
-        "6/16 is double the size of 3/8."
-      ],
-      "correctIndex": 2,
-      "explanation": "To compare fractions, you must find a common denominator. If you multiply both the numerator and denominator of 3/8 by 2, you get 6/16. Therefore, they represent the exact same physical length. A common error is comparing only the numerators (6 > 3) or only the denominators (16 > 8) without accounting for the value of the whole unit.",
-      "hint": "Try converting 3/8 to a fraction with a denominator of 16 to see if the numerators match.",
-      "approvedAt": "2026-10-04T01:59:23.473Z",
-      "audit": {
-        "status": "verified",
-        "confidence": 95,
-        "auditorModel": "openai/gpt-oss-20b",
-        "reason": "Answer key verified. Option 2 accurately solves the problem with sound pedagogical explanation.",
-        "suggestedCorrectIndex": null,
-        "verifiedAt": "2026-10-04T01:59:13.186Z"
-      },
-      "sessionId": "session-default",
-      "createdAt": "2026-10-04T01:59:13.186Z"
-    },
-    "drill-2": {
-      "id": "drill-2",
-      "title": "Cross-Multiplication for Comparison",
-      "question": "You have two pieces of pipe: one is 5/8 inch and the other is 7/12 inch. To determine which is longer using cross-multiplication, you multiply 5 × 12 and 7 × 8. What does the result indicate?",
-      "options": [
-        "5/8 is longer because 60 is greater than 56.",
-        "7/12 is longer because 56 is greater than 60.",
-        "They are equal in length because 60 and 56 are close.",
-        "5/8 is longer because 5 is greater than 7."
+        "A",
+        "B"
       ],
       "correctIndex": 0,
-      "explanation": "Cross-multiplication works by finding a common denominator implicitly. 5/8 becomes 60/96 and 7/12 becomes 56/96. Since 60 > 56, the 5/8 inch pipe is longer. The confusion often arises from thinking the larger product always means the smaller fraction, but in this context, the larger cross-product corresponds to the larger fraction value.",
-      "hint": "Calculate 5 × 12 and 7 × 8. The fraction associated with the larger product is the longer measurement.",
-      "approvedAt": "2026-10-04T01:59:23.473Z",
-      "audit": {
-        "status": "verified",
-        "confidence": 95,
-        "auditorModel": "openai/gpt-oss-20b",
-        "reason": "Answer key verified. Option 0 accurately solves the problem with sound pedagogical explanation.",
-        "suggestedCorrectIndex": null,
-        "verifiedAt": "2026-10-04T01:59:13.186Z"
-      },
+      "explanation": "Exp",
+      "hint": "Hnt",
+      "approvedAt": "2026-10-04T17:20:40.531Z",
       "sessionId": "session-default",
-      "createdAt": "2026-10-04T01:59:13.186Z"
+      "createdAt": "2026-10-04T17:20:40.531Z"
+    },
+    "d-test-2": {
+      "id": "d-test-2",
+      "title": "T2",
+      "question": "Q2?",
+      "options": [
+        "A",
+        "B"
+      ],
+      "correctIndex": 1,
+      "explanation": "Exp",
+      "hint": "Hnt",
+      "approvedAt": "2026-10-04T17:20:40.531Z",
+      "sessionId": "session-default",
+      "createdAt": "2026-10-04T17:20:40.531Z"
     }
   },
   "flags": {
@@ -71,6 +51,22 @@
       "question": "You are cutting a piece of EMT conduit and need to verify if a 6/16-inch section is the same length as a 3/8-inch section. Which statement correctly describes the relationship between these two measurements?",
       "studentNote": "Still need more practice on measuring sixteenths on conduit benders",
       "timestamp": "07:32 AM"
+    },
+    "flag-1791079517150-ocxx": {
+      "id": "flag-1791079517150-ocxx",
+      "sessionId": "session-default",
+      "drillId": "drill-1",
+      "question": "A conduit bracket specifies 3/8\" clearance. Which measurement is physically equivalent?",
+      "studentNote": "Still need help comparing 3/8 vs 6/16 on conduit benders",
+      "timestamp": "07:35 AM"
+    },
+    "flag-1791101580207-63y8": {
+      "id": "flag-1791101580207-63y8",
+      "sessionId": "session-default",
+      "drillId": "drill-live-test",
+      "question": "How do you convert 5/8 into 16ths?",
+      "studentNote": "Still unsure about numerator multiplying",
+      "timestamp": "01:43 PM"
     }
   },
   "attempts": {
@@ -113,6 +109,22 @@
       "isCorrect": true,
       "timeSpentSeconds": 0,
       "createdAt": "2026-10-04T02:01:41.195Z"
+    },
+    "attempt-1791086607975-snqi": {
+      "id": "attempt-1791086607975-snqi",
+      "drillId": "drill-1",
+      "selectedIndex": 0,
+      "isCorrect": false,
+      "timeSpentSeconds": 0,
+      "createdAt": "2026-10-04T04:03:27.975Z"
+    },
+    "attempt-1791096003336-jhse": {
+      "id": "attempt-1791096003336-jhse",
+      "drillId": "drill-1",
+      "selectedIndex": 2,
+      "isCorrect": true,
+      "timeSpentSeconds": 0,
+      "createdAt": "2026-10-04T06:40:03.336Z"
     }
   }
 }
