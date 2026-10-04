@@ -17,6 +17,8 @@ interface AuthContextType {
   activeRole: 'tutor' | 'learner';
   signInAsTutor: () => Promise<void>;
   signInAsLearner: () => Promise<void>;
+  signInWithCredentials: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUpWithCredentials: (email: string, password: string, fullName: string, role: 'tutor' | 'learner') => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   switchRole: (role: 'tutor' | 'learner') => void;
   isAuthModalOpen: boolean;
@@ -112,9 +114,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInAsLearner = async () => {
-    setActiveRole('learner');
-    setUser(DEFAULT_LEARNER_PROFILE);
-    setIsAuthModalOpen(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'marcus.vance@gmail.com',
+        password: 'SkyyLearn2026!'
+      });
+      if (error) {
+        console.warn('Supabase learner sign-in fallback:', error.message);
+      }
+      setActiveRole('learner');
+      setUser(DEFAULT_LEARNER_PROFILE);
+      setIsAuthModalOpen(false);
+    } catch (err) {
+      console.warn('Learner sign-in error:', err);
+      setActiveRole('learner');
+      setUser(DEFAULT_LEARNER_PROFILE);
+      setIsAuthModalOpen(false);
+    }
+  };
+
+  const signInWithCredentials = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        const role = (data.user.user_metadata?.role as 'tutor' | 'learner') || 'learner';
+        setActiveRole(role);
+        setUser({
+          id: data.user.id,
+          email: data.user.email || '',
+          fullName: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
+          role
+        });
+      }
+
+      setIsAuthModalOpen(false);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Login failed' };
+    }
+  };
+
+  const signUpWithCredentials = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: 'tutor' | 'learner'
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName, role })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Signup failed' };
+      }
+
+      // Immediately sign in with the new credentials via GoTrue
+      return await signInWithCredentials(email, password);
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Signup failed' };
+    }
   };
 
   const switchRole = (newRole: 'tutor' | 'learner') => {
@@ -139,6 +211,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         activeRole,
         signInAsTutor,
         signInAsLearner,
+        signInWithCredentials,
+        signUpWithCredentials,
         signOut,
         switchRole,
         isAuthModalOpen,

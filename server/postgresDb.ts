@@ -54,6 +54,87 @@ export class PostgresDatabase {
     }
   }
 
+  async createConfirmedUser(email: string, password: string, fullName: string, role: 'tutor' | 'learner') {
+    if (!this.pool || !this.isConnected) {
+      throw new Error('Database pool not connected');
+    }
+
+    const existing = await this.pool.query('SELECT id FROM auth.users WHERE email = $1 LIMIT 1;', [email]);
+    let actualUserId: string;
+
+    if (existing.rows.length > 0) {
+      actualUserId = existing.rows[0].id;
+      await this.pool.query(
+        `UPDATE auth.users
+         SET encrypted_password = crypt($2, gen_salt('bf')),
+             email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
+             confirmation_token = '',
+             recovery_token = '',
+             email_change_token_new = '',
+             email_change = '',
+             raw_user_meta_data = $3::jsonb,
+             updated_at = NOW()
+         WHERE id = $1::uuid;`,
+        [actualUserId, password, JSON.stringify({ full_name: fullName, role })]
+      );
+    } else {
+      actualUserId = crypto.randomUUID();
+      await this.pool.query(
+        `INSERT INTO auth.users (
+          instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+          confirmation_token, recovery_token, email_change_token_new, email_change,
+          raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+        ) VALUES (
+          '00000000-0000-0000-0000-000000000000',
+          $1::uuid,
+          'authenticated',
+          'authenticated',
+          $2,
+          crypt($3, gen_salt('bf')),
+          NOW(),
+          '', '', '', '',
+          '{"provider":"email","providers":["email"]}',
+          $4::jsonb,
+          NOW(),
+          NOW()
+        );`,
+        [actualUserId, email, password, JSON.stringify({ full_name: fullName, role })]
+      );
+    }
+
+    const identityId = crypto.randomUUID();
+    await this.pool.query(
+      `INSERT INTO auth.identities (
+        provider_id, id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+      ) VALUES (
+        $1::text,
+        $2::uuid,
+        $1::uuid,
+        $3::jsonb,
+        'email',
+        NOW(),
+        NOW(),
+        NOW()
+      ) ON CONFLICT (provider_id, provider) DO UPDATE
+      SET identity_data = $3::jsonb,
+          updated_at = NOW();`,
+      [actualUserId, identityId, JSON.stringify({ sub: actualUserId, email, full_name: fullName, role })]
+    );
+
+    // Keep public.profiles in sync
+    await this.pool.query(
+      `INSERT INTO public.profiles (id, email, full_name, role, updated_at)
+       VALUES ($1::uuid, $2, $3, $4, NOW())
+       ON CONFLICT (id) DO UPDATE
+       SET full_name = EXCLUDED.full_name,
+           role = EXCLUDED.role,
+           updated_at = NOW();`,
+      [actualUserId, email, fullName, role]
+    );
+
+    return { id: actualUserId, email, fullName, role };
+  }
+
   async getSession(id: string = '00000000-0000-0000-0000-000000000001'): Promise<DBSession> {
     if (!this.pool || !this.isConnected) {
       return fileDb.getSession('session-default');

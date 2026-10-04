@@ -303,7 +303,7 @@ app.get('/api/agenda', async (c) => {
   });
 });
 
-// Supabase Auth: Sign Up
+// Supabase Auth: Sign Up (Zero-friction auto-confirmed registration)
 app.post('/api/auth/signup', async (c) => {
   try {
     const { email, password, fullName, role } = await c.req.json();
@@ -311,15 +311,18 @@ app.post('/api/auth/signup', async (c) => {
       return c.json({ success: false, error: 'Email and password required' }, 400);
     }
 
-    const { data, error } = await supabaseServer.auth.signUp({
+    // 1. Create and confirm user in Supabase Postgres directly
+    await db.createConfirmedUser(
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName || email.split('@')[0],
-          role: role || 'learner'
-        }
-      }
+      fullName || email.split('@')[0],
+      role || 'learner'
+    );
+
+    // 2. Immediately sign in to get the live Supabase JWT session
+    const { data, error } = await supabaseServer.auth.signInWithPassword({
+      email,
+      password
     });
 
     if (error) return c.json({ success: false, error: error.message }, 400);
