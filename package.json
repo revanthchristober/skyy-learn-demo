@@ -19,12 +19,14 @@
     "@supabase/server": "^1.9.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
+    "@types/ws": "^8.18.2",
     "dotenv": "^16.4.7",
     "groq-sdk": "^1.6.0",
     "hono": "^4.7.4",
     "pg": "^8.23.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "ws": "^8.22.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

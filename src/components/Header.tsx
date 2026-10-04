@@ -8,6 +8,7 @@ interface HeaderProps {
   setActiveTab: (tab: TabKey) => void;
   isApproved: boolean;
   flagCount: number;
+  isConnected?: boolean;
   onOpenArchitecture: () => void;
 }
 
@@ -23,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   isApproved,
   flagCount,
+  isConnected = false,
   onOpenArchitecture
 }) => {
   const { user, activeRole, openAuthModal } = useAuth();
@@ -30,7 +32,16 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <aside className="border-b border-line bg-surface md:w-60 md:shrink-0 md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r md:flex md:flex-col">
       <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-5">
-        <span className="text-[17px] font-semibold tracking-tight text-ink">Skyy Learn</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[17px] font-semibold tracking-tight text-ink">Skyy Learn</span>
+          <span
+            title={isConnected ? 'Real-time WebSocket connected' : 'Connecting to real-time sync...'}
+            className="inline-flex items-center gap-1 font-mono text-[11px] text-muted"
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-ok-ink' : 'bg-[#dedbd3]'}`} />
+            {isConnected && <span className="text-[11px] text-muted font-normal">live</span>}
+          </span>
+        </div>
         <button
           onClick={openAuthModal}
           className="md:hidden text-sm text-muted hover:text-ink"

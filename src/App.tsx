@@ -18,6 +18,8 @@ import { FlagModal } from './components/FlagModal';
 import { ArchitectureModal } from './components/ArchitectureModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useRealtimeSync } from './hooks/useRealtimeSync';
+import { XIcon } from '@phosphor-icons/react';
 
 const PRESETS = {
   fractions: {
@@ -71,6 +73,20 @@ function SkyyLearnApp() {
   // Modals
   const [isFlagModalOpen, setIsFlagModalOpen] = useState(false);
   const [isArchModalOpen, setIsArchModalOpen] = useState(false);
+
+  // Real-time WebSocket sync
+  const { isConnected, activeToast, dismissToast } = useRealtimeSync({
+    onDrillsApproved: (approvedDrills) => {
+      setDrills(approvedDrills);
+      setIsApproved(true);
+    },
+    onQuestionFlagged: (flag) => {
+      setFlaggedTopics(prev => {
+        if (prev.some(f => f.drillId === flag.drillId && f.timestamp === flag.timestamp)) return prev;
+        return [flag, ...prev];
+      });
+    }
+  });
 
   // Initial load from backend database
   useEffect(() => {
@@ -202,6 +218,7 @@ function SkyyLearnApp() {
         setActiveTab={setActiveTab}
         isApproved={isApproved}
         flagCount={flaggedTopics.length}
+        isConnected={isConnected}
         onOpenArchitecture={() => setIsArchModalOpen(true)}
       />
 
@@ -275,6 +292,34 @@ function SkyyLearnApp() {
       />
 
       <AuthModal />
+
+      {/* Real-time sync toast notification */}
+      {activeToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 rounded-md border border-line bg-surface px-3.5 py-2.5 text-xs text-ink shadow-subtle animate-in fade-in duration-200"
+        >
+          <span
+            className={`w-2 h-2 rounded-full shrink-0 ${
+              activeToast.type === 'approved'
+                ? 'bg-ok-ink'
+                : activeToast.type === 'flagged'
+                ? 'bg-warn-ink'
+                : 'bg-accent'
+            }`}
+          />
+          <span className="font-mono text-[11px] text-muted">{activeToast.timestamp}</span>
+          <span className="font-medium text-ink">{activeToast.message}</span>
+          <button
+            onClick={dismissToast}
+            aria-label="Dismiss notification"
+            className="ml-2 text-muted hover:text-ink transition-colors p-0.5 rounded cursor-pointer"
+          >
+            <XIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
     </div>
   );

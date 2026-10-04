@@ -8,6 +8,7 @@ import { supabaseServer } from './supabase';
 import { generateValidatedDrills } from './groq';
 import { auditDrillsWithCheaperLLM } from './verifier';
 import { GenerateRequestSchema, UpdateDrillSchema, FlagRequestSchema, RecordAttemptSchema } from './schemas';
+import { initRealtime, setRealtimeInstance, broadcastRealtime } from './realtime';
 
 // Load environment variables strictly into server process.env
 dotenv.config({ path: '.env.local' });
@@ -209,6 +210,18 @@ app.post('/api/drills/:id/dismiss-flag', async (c) => {
 // Tutor Approves All Drills (The Core Guardrail)
 app.post('/api/drills/approve-all', async (c) => {
   const drills = await db.approveAllDrills('00000000-0000-0000-0000-000000000001');
+
+  // Realtime push: immediately notify connected learner clients
+  broadcastRealtime({
+    type: 'DRILLS_APPROVED',
+    payload: {
+      sessionId: '00000000-0000-0000-0000-000000000001',
+      drills,
+      approvedAt: new Date().toISOString()
+    },
+    timestamp: new Date().toISOString()
+  });
+
   return c.json({
     success: true,
     message: 'All drills verified and approved by tutor in PostgreSQL',
@@ -251,6 +264,16 @@ app.post('/api/learner/flag', async (c) => {
     parsed.data.question,
     parsed.data.studentNote
   );
+
+  // Realtime push: immediately notify connected tutor clients
+  broadcastRealtime({
+    type: 'QUESTION_FLAGGED',
+    payload: {
+      sessionId: '00000000-0000-0000-0000-000000000001',
+      flag
+    },
+    timestamp: new Date().toISOString()
+  });
 
   return c.json({
     success: true,
@@ -367,12 +390,24 @@ app.get('/api/auth/me', async (c) => {
   return c.json({ authenticated: true, user });
 });
 
+// Realtime WebSocket Status
+app.get('/api/realtime/status', (c) => {
+  return c.json({
+    status: 'active',
+    path: '/ws',
+    clients: realtime ? realtime.getClientCount() : 0
+  });
+});
+
 const PORT = 3001;
 console.log(`[Skyy Learn Server] Starting on port ${PORT}...`);
 
-serve({
+const server = serve({
   fetch: app.fetch,
   port: PORT
 }, (info) => {
   console.log(`[Skyy Learn Server] Running on http://localhost:${info.port}`);
 });
+
+const realtime = initRealtime(server);
+setRealtimeInstance(realtime);
