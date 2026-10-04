@@ -45,7 +45,14 @@ export interface GenerationResponse {
   meta: {
     durationMs: number;
     model: string;
+    attempts?: number;
+    retryLogs?: Array<{
+      attempt: number;
+      reason: string;
+      errors: string[];
+    }>;
     promptTokens?: number;
     completionTokens?: number;
   };
 }
+

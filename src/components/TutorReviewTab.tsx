@@ -5,7 +5,16 @@ import { Drill } from '../types';
 interface TutorReviewTabProps {
   drills: Drill[];
   studentName: string;
-  generationMeta: { durationMs: number; model: string } | null;
+  generationMeta: {
+    durationMs: number;
+    model: string;
+    attempts?: number;
+    retryLogs?: Array<{
+      attempt: number;
+      reason: string;
+      errors: string[];
+    }>;
+  } | null;
   onUpdateDrill: (id: string, updates: { question?: string; explanation?: string }) => Promise<void>;
   onApproveAll: () => Promise<void>;
   onBackToNotes: () => void;
@@ -44,12 +53,19 @@ export const TutorReviewTab: React.FC<TutorReviewTabProps> = ({
     <div className="space-y-6">
       <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-base font-semibold text-white">Tutor Review &amp; Verification Gate</h2>
             {generationMeta && (
-              <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-400 border border-emerald-800/60 font-mono">
-                Validated via {generationMeta.model} in {generationMeta.durationMs}ms
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-400 border border-emerald-800/60 font-mono">
+                  Validated via {generationMeta.model} ({generationMeta.durationMs}ms)
+                </span>
+                {generationMeta.attempts && generationMeta.attempts > 1 && (
+                  <span className="text-[11px] px-2 py-0.5 rounded bg-amber-950/40 text-amber-400 border border-amber-800/60 font-mono">
+                    Self-Corrected on Attempt {generationMeta.attempts}
+                  </span>
+                )}
+              </div>
             )}
           </div>
           <p className="text-xs text-slate-400 mt-1">

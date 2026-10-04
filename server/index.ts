@@ -110,7 +110,9 @@ app.post('/api/sessions/generate', async (c) => {
       drills: createdDrills,
       meta: {
         durationMs: result.durationMs,
-        model: result.model
+        model: result.model,
+        attempts: result.attempts,
+        retryLogs: result.retryLogs
       }
     });
   } catch (err: unknown) {

@@ -48,7 +48,16 @@ export default function App() {
   // Async Status
   const [isGenerating, setIsGenerating] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const [generationMeta, setGenerationMeta] = useState<{ durationMs: number; model: string } | null>(null);
+  const [generationMeta, setGenerationMeta] = useState<{
+    durationMs: number;
+    model: string;
+    attempts?: number;
+    retryLogs?: Array<{
+      attempt: number;
+      reason: string;
+      errors: string[];
+    }>;
+  } | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
   // Modals
@@ -105,7 +114,9 @@ export default function App() {
       setIsApproved(false);
       setGenerationMeta({
         durationMs: res.meta.durationMs,
-        model: res.meta.model
+        model: res.meta.model,
+        attempts: res.meta.attempts,
+        retryLogs: res.meta.retryLogs
       });
       setActiveTab('review');
     } catch (err: unknown) {
