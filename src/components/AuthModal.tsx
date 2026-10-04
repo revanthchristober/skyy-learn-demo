@@ -159,9 +159,9 @@ export const AuthModal: React.FC = () => {
                   {activeRole === 'tutor' && <span className="text-[11px] text-indigo-400 font-semibold">Active</span>}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Full authority: log notes, generate drills, review auditor flags, approve drills.
+                  Tutor access: edit notes, review questions, approve practice sets.
                 </p>
-                <div className="text-[10px] text-slate-500 mt-1 flex items-center gap-1 font-mono">
+                <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
                   <Key className="w-3 h-3" />
                   dakota.munro.tutor@gmail.com
                 </div>
@@ -185,9 +185,9 @@ export const AuthModal: React.FC = () => {
                   {activeRole === 'learner' && <span className="text-[11px] text-emerald-400 font-semibold">Active</span>}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Practice access: answers questions, logs attempts, flags friction for next call.
+                  Learner access: answer questions, log attempts, flag items for next session.
                 </p>
-                <div className="text-[10px] text-slate-500 mt-1 flex items-center gap-1 font-mono">
+                <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
                   <Key className="w-3 h-3" />
                   marcus.vance@gmail.com
                 </div>

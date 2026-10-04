@@ -35,13 +35,13 @@ export const NextSessionTab: React.FC<NextSessionTabProps> = ({
       <div className="bg-[#131b2e] border border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-sm flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold text-white">Next 1:1 Tutoring Agenda</h2>
+            <h2 className="text-base font-semibold text-white">Next Tutoring Agenda</h2>
             <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
               Prep Ready
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Student friction points automatically queued for tutor review in the next live call.
+            Student questions queued for live review in the next session.
           </p>
         </div>
         <div className="text-xs text-slate-300 font-medium bg-[#0d1322] border border-slate-800 px-3 py-1.5 rounded-xl">
@@ -63,12 +63,12 @@ export const NextSessionTab: React.FC<NextSessionTabProps> = ({
           </div>
         </div>
         <div className="p-4 rounded-2xl border border-slate-800/80 bg-[#131b2e] shadow-sm space-y-1">
-          <span className="text-xs text-slate-400">Items Flagged for Live Call</span>
+          <span className="text-xs text-slate-400">Flagged Questions</span>
           <div className={`text-sm font-semibold flex items-center gap-1.5 ${
             flaggedTopics.length > 0 ? 'text-amber-400' : 'text-slate-300'
           }`}>
             <Flag className="w-4 h-4" />
-            <span>{flaggedTopics.length} Focus Points</span>
+            <span>{flaggedTopics.length} Flagged</span>
           </div>
         </div>
       </div>
@@ -77,7 +77,7 @@ export const NextSessionTab: React.FC<NextSessionTabProps> = ({
       <div className="space-y-3">
         <h3 className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
           <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Friction Points for Next 1:1 Discussion</span>
+          <span>Items to Review Live</span>
         </h3>
 
         {flaggedTopics.length === 0 ? (
@@ -85,9 +85,9 @@ export const NextSessionTab: React.FC<NextSessionTabProps> = ({
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 mx-auto flex items-center justify-center">
               <CheckCircle2 className="w-5 h-5" />
             </div>
-            <div className="text-xs font-semibold text-white">No Flagged Confusion Points</div>
+            <div className="text-xs font-semibold text-white">No Flagged Items</div>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              {studentName} completed the practice drills without requesting clarification. Ready for new curriculum!
+              {studentName} completed the practice drills without requesting clarification.
             </p>
           </div>
         ) : (
@@ -107,7 +107,7 @@ export const NextSessionTab: React.FC<NextSessionTabProps> = ({
                     "{item.studentNote}"
                   </div>
                 </div>
-                <span className="text-[11px] text-slate-500 font-mono shrink-0">
+                <span className="text-xs text-slate-400 shrink-0">
                   {item.timestamp}
                 </span>
               </div>

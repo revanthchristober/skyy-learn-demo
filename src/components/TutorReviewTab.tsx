@@ -77,9 +77,9 @@ export const TutorReviewTab: React.FC<TutorReviewTabProps> = ({
       <div className="bg-[#131b2e] border border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-base font-semibold text-white">Curriculum Review &amp; Approval</h2>
+            <h2 className="text-base font-semibold text-white">Review Practice Questions</h2>
             <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-              {drills.length} Drills Ready
+              {drills.length} Questions Ready
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
@@ -111,9 +111,9 @@ export const TutorReviewTab: React.FC<TutorReviewTabProps> = ({
         <div className="p-4 rounded-2xl border border-amber-600/40 bg-amber-950/20 text-xs text-amber-200 flex items-start gap-3 shadow-sm">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-semibold text-amber-300">Auditor Quality Check: </span>
+            <span className="font-semibold text-amber-300">Verification Note: </span>
             <span>
-              {flaggedCount} question has a suggested correction from the secondary auditor pass. Please review the highlighted card below.
+              {flaggedCount} question has a suggested correction. Review the highlighted card below before approving.
             </span>
           </div>
         </div>
@@ -137,7 +137,7 @@ export const TutorReviewTab: React.FC<TutorReviewTabProps> = ({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xs font-bold font-mono">
+                  <span className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xs font-semibold">
                     {index + 1}
                   </span>
                   <span className="text-xs font-semibold text-slate-200">
@@ -146,13 +146,13 @@ export const TutorReviewTab: React.FC<TutorReviewTabProps> = ({
                   {isVerified && (
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded-full">
                       <ShieldCheck className="w-3 h-3" />
-                      Auditor Verified
+                      Verified
                     </span>
                   )}
                   {isFlagged && (
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400 bg-amber-950/50 border border-amber-700/50 px-2 py-0.5 rounded-full">
                       <AlertTriangle className="w-3 h-3" />
-                      Review Recommended
+                      Review Suggested
                     </span>
                   )}
                 </div>
@@ -198,7 +198,7 @@ export const TutorReviewTab: React.FC<TutorReviewTabProps> = ({
                   {drill.audit.suggestedCorrectIndex !== null && drill.audit.suggestedCorrectIndex !== undefined && (
                     <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-amber-800/40">
                       <div className="text-amber-200">
-                        <span className="font-semibold text-amber-300">Auditor recommendation: </span>
+                        <span className="font-semibold text-amber-300">Suggested answer: </span>
                         Option {drill.audit.suggestedCorrectIndex + 1} (
                         <span className="font-semibold text-white">
                           {drill.options[drill.audit.suggestedCorrectIndex]}

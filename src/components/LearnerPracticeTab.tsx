@@ -77,7 +77,7 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
             <span className="text-slate-600">·</span>
             <span className="text-slate-400">{subject}</span>
           </div>
-          <span className="text-slate-400 font-medium font-mono text-[11px]">
+          <span className="text-slate-400 font-medium text-xs">
             {currentDrillIndex + 1} of {drills.length}
           </span>
         </div>
@@ -94,7 +94,7 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
       {/* Main Practice Problem Card */}
       <div className="bg-[#131b2e] border border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-6">
         <div>
-          <span className="inline-block text-[11px] font-semibold text-indigo-400 uppercase tracking-wider mb-1.5">
+          <span className="inline-block text-xs font-medium text-indigo-400 mb-1">
             {currentDrill.title}
           </span>
           <h3 className="text-base sm:text-lg font-semibold text-white leading-snug">
@@ -209,12 +209,12 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
               {selectedAnswer === currentDrill.correctIndex ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Great job! Correct calculation</span>
+                  <span>Correct calculation</span>
                 </>
               ) : (
                 <>
                   <AlertCircle className="w-4 h-4 text-amber-400" />
-                  <span>Review the reasoning</span>
+                  <span>Key takeaway</span>
                 </>
               )}
             </div>
@@ -231,7 +231,7 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-[#0d1322] text-xs text-slate-400 hover:text-amber-300 transition"
           >
             <Flag className="w-3.5 h-3.5 text-amber-400" />
-            <span>Still confused? Flag for tutor</span>
+            <span>Flag for Tutor</span>
           </button>
 
           {showExplanation && (
@@ -239,7 +239,7 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
               onClick={handleNext}
               className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-md shadow-indigo-600/20"
             >
-              <span>{currentDrillIndex < drills.length - 1 ? 'Next Question' : 'Complete Session'}</span>
+              <span>{currentDrillIndex < drills.length - 1 ? 'Next Question' : 'Complete Practice'}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}

@@ -120,10 +120,10 @@ export const TutorNotesTab: React.FC<TutorNotesTabProps> = ({
         <div className="bg-[#131b2e]/60 border border-slate-800/60 rounded-2xl p-4 text-xs space-y-2">
           <div className="flex items-center gap-2 text-indigo-300 font-medium">
             <ShieldCheck className="w-4 h-4 text-indigo-400" />
-            Human-in-the-Loop Gate
+            Tutor Quality Gate
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            Generated practice drills stay locked in review until you verify the answer keys and approve them for {studentName}.
+            Questions remain locked until you review the answer keys and approve the set for {studentName}.
           </p>
         </div>
       </div>
@@ -133,7 +133,7 @@ export const TutorNotesTab: React.FC<TutorNotesTabProps> = ({
         <div>
           <h2 className="text-base font-semibold text-white">1:1 Session Intake &amp; Debrief</h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Log what was taught and pinpoint where the learner hesitated. The AI engine turns these notes into tailored practice drills.
+            Record what was covered and where the student experienced friction to generate targeted practice.
           </p>
         </div>
 
@@ -202,7 +202,7 @@ export const TutorNotesTab: React.FC<TutorNotesTabProps> = ({
 
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-800/60">
           <p className="text-[11px] text-slate-500">
-            Produces 4 targeted multiple-choice drills with audited answer keys.
+            Prepares 4 targeted practice questions for review.
           </p>
 
           <button
@@ -213,12 +213,12 @@ export const TutorNotesTab: React.FC<TutorNotesTabProps> = ({
             {isGenerating ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Generating &amp; Auditing Drills...</span>
+                <span>Generating Practice Questions...</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                <span>Generate Practice Drills</span>
+                <span>Generate Practice Questions</span>
                 <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
               </>
             )}

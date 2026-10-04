@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
             <span>3. Practice Drills</span>
             {isApproved && flagCount > 0 && (
-              <span className="px-1.5 py-0.2 bg-amber-500/20 text-amber-300 rounded text-[10px] font-mono">
+              <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full text-[10px] font-semibold">
                 {flagCount}
               </span>
             )}
