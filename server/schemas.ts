@@ -141,10 +141,19 @@ export const FlagRequestSchema = z.object({
   studentNote: z.string().min(1)
 });
 
+export const RecordAttemptSchema = z.object({
+  drillId: z.string().min(1),
+  learnerId: z.string().uuid().optional().nullable(),
+  selectedIndex: z.number().int().min(0),
+  isCorrect: z.boolean(),
+  timeSpentSeconds: z.number().int().min(0).optional()
+});
+
 export type RawDrill = z.infer<typeof RawDrillSchema>;
 export type GroqOutput = z.infer<typeof GroqOutputSchema>;
 export type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
 export type DrillVerificationItem = z.infer<typeof DrillVerificationItemSchema>;
 export type BatchVerificationOutput = z.infer<typeof BatchVerificationOutputSchema>;
 export type DrillAuditMeta = z.infer<typeof DrillAuditMetaSchema>;
+export type RecordAttempt = z.infer<typeof RecordAttemptSchema>;
 

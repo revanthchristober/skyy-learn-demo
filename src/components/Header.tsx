@@ -1,6 +1,7 @@
 import React from 'react';
-import { Code, Zap } from 'lucide-react';
+import { Code, Zap, UserCheck } from 'lucide-react';
 import { TabKey } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   activeTab: TabKey;
@@ -17,6 +18,8 @@ export const Header: React.FC<HeaderProps> = ({
   flagCount,
   onOpenArchitecture
 }) => {
+  const { user, activeRole, openAuthModal } = useAuth();
+
   return (
     <>
       {/* Top Utility Bar */}
@@ -26,16 +29,29 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="text-slate-600">/</span>
           <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
             <Zap className="w-3.5 h-3.5 fill-emerald-400" />
-            Backend REST API + Live Groq LPU (Node.js &amp; TypeScript)
+            Backend REST API + Live Groq LPU + Supabase Postgres 17
           </span>
         </div>
-        <button 
-          onClick={onOpenArchitecture}
-          className="text-slate-300 hover:text-white underline underline-offset-4 flex items-center gap-1.5 transition"
-        >
-          <Code className="w-3.5 h-3.5" />
-          Technical Architecture Blueprint
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={openAuthModal}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/70 transition"
+            title="Click to switch between Tutor and Learner persona"
+          >
+            <span className={`w-2 h-2 rounded-full ${activeRole === 'tutor' ? 'bg-indigo-400' : 'bg-emerald-400'}`}></span>
+            <span className="font-medium">{user ? user.fullName : 'Dakota Munro'}</span>
+            <span className="text-[10px] uppercase font-mono px-1 py-0.2 rounded bg-slate-900 text-slate-400">
+              {activeRole}
+            </span>
+          </button>
+          <button 
+            onClick={onOpenArchitecture}
+            className="text-slate-300 hover:text-white underline underline-offset-4 flex items-center gap-1.5 transition"
+          >
+            <Code className="w-3.5 h-3.5" />
+            Technical Architecture Blueprint
+          </button>
+        </div>
       </div>
 
       {/* Main Header */}

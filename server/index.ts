@@ -3,10 +3,11 @@ import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import dotenv from 'dotenv';
-import { db } from './db';
+import { postgresDb as db } from './postgresDb';
+import { supabaseServer } from './supabase';
 import { generateValidatedDrills } from './groq';
 import { auditDrillsWithCheaperLLM } from './verifier';
-import { GenerateRequestSchema, UpdateDrillSchema, FlagRequestSchema } from './schemas';
+import { GenerateRequestSchema, UpdateDrillSchema, FlagRequestSchema, RecordAttemptSchema } from './schemas';
 
 // Load environment variables strictly into server process.env
 dotenv.config({ path: '.env.local' });
@@ -39,17 +40,22 @@ app.get('/api/health', (c) => {
     timestamp: new Date().toISOString(),
     service: 'skyy-learn-backend',
     runtime: 'Node.js + Hono (TypeScript)',
+    database: 'Supabase PostgreSQL 17 (Cloud)',
+    host: 'db.bturhosivfvyvanztkjb.supabase.co',
+    authProvider: 'Supabase GoTrue (JWT)',
+    tables: ['profiles', 'sessions', 'session_notes', 'drills', 'drill_attempts', 'flagged_topics'],
     llmProvider: 'Groq Cloud (LPU)',
-    model: 'qwen/qwen3.8-27b',
+    generatorModel: 'qwen/qwen3.8-27b',
+    auditorModel: 'openai/gpt-oss-20b',
     keyIsolation: 'Server-side process.env (0 key exposure to browser)'
   });
 });
 
 // Get active session
-app.get('/api/session', (c) => {
-  const session = db.getSession();
-  const drills = db.getDrills();
-  const flags = db.getFlags();
+app.get('/api/session', async (c) => {
+  const session = await db.getSession();
+  const drills = await db.getDrills();
+  const flags = await db.getFlags();
 
   return c.json({
     session,
@@ -58,7 +64,7 @@ app.get('/api/session', (c) => {
   });
 });
 
-// Generate drills (Tutor Action: Calls server-side Groq LPU)
+// Generate drills (Tutor Action: Calls server-side Groq LPU + Auditor pass)
 app.post('/api/sessions/generate', async (c) => {
   try {
     const body = await c.req.json();
@@ -74,8 +80,8 @@ app.post('/api/sessions/generate', async (c) => {
 
     const { studentName, subject, tutorNotes, tutorToneNote } = parsed.data;
 
-    // Update session metadata
-    db.updateSession('session-default', {
+    // Update session metadata in live PostgreSQL
+    await db.updateSession('00000000-0000-0000-0000-000000000001', {
       studentName,
       subject,
       tutorNotes,
@@ -94,9 +100,9 @@ app.post('/api/sessions/generate', async (c) => {
     // 2. Call second, cheaper LLM for independent correctness pass (Auditor: GPT-OSS 20B)
     const auditResult = await auditDrillsWithCheaperLLM(genResult.drills);
 
-    // 3. Save to persistent DB with approvedAt: null (Locked state) and attach audit metadata
-    const createdDrills = db.setDrillsForSession(
-      'session-default',
+    // 3. Save to live Supabase Postgres with approved_at: null (Locked state) and attach audit metadata
+    const createdDrills = await db.setDrillsForSession(
+      '00000000-0000-0000-0000-000000000001',
       genResult.drills.map(d => ({
         id: d.id,
         title: d.title,
@@ -146,7 +152,7 @@ app.patch('/api/drills/:id', async (c) => {
     return c.json({ success: false, error: parsed.error.issues }, 400);
   }
 
-  const updated = db.updateDrill(id, parsed.data);
+  const updated = await db.updateDrill(id, parsed.data);
   if (!updated) {
     return c.json({ success: false, error: 'Drill not found' }, 404);
   }
@@ -155,15 +161,16 @@ app.patch('/api/drills/:id', async (c) => {
 });
 
 // Tutor accepts the auditor's suggested answer key correction
-app.post('/api/drills/:id/accept-suggestion', (c) => {
+app.post('/api/drills/:id/accept-suggestion', async (c) => {
   const id = c.req.param('id');
-  const drill = db.getDrills().find(d => d.id === id);
+  const drills = await db.getDrills();
+  const drill = drills.find(d => d.id === id);
   if (!drill) {
     return c.json({ success: false, error: 'Drill not found' }, 404);
   }
 
   if (drill.audit?.suggestedCorrectIndex !== undefined && drill.audit?.suggestedCorrectIndex !== null) {
-    const updated = db.updateDrill(id, {
+    const updated = await db.updateDrill(id, {
       correctIndex: drill.audit.suggestedCorrectIndex,
       audit: {
         ...drill.audit,
@@ -179,14 +186,15 @@ app.post('/api/drills/:id/accept-suggestion', (c) => {
 });
 
 // Tutor dismisses an auditor flag (manual tutor override)
-app.post('/api/drills/:id/dismiss-flag', (c) => {
+app.post('/api/drills/:id/dismiss-flag', async (c) => {
   const id = c.req.param('id');
-  const drill = db.getDrills().find(d => d.id === id);
+  const drills = await db.getDrills();
+  const drill = drills.find(d => d.id === id);
   if (!drill) {
     return c.json({ success: false, error: 'Drill not found' }, 404);
   }
 
-  const updated = db.updateDrill(id, {
+  const updated = await db.updateDrill(id, {
     audit: drill.audit ? {
       ...drill.audit,
       status: 'verified',
@@ -199,18 +207,18 @@ app.post('/api/drills/:id/dismiss-flag', (c) => {
 });
 
 // Tutor Approves All Drills (The Core Guardrail)
-app.post('/api/drills/approve-all', (c) => {
-  const drills = db.approveAllDrills('session-default');
+app.post('/api/drills/approve-all', async (c) => {
+  const drills = await db.approveAllDrills('00000000-0000-0000-0000-000000000001');
   return c.json({
     success: true,
-    message: 'All drills verified and approved by tutor',
+    message: 'All drills verified and approved by tutor in PostgreSQL',
     drills
   });
 });
 
 // Learner Endpoint (GATED BY SERVER: Only approved drills returned!)
-app.get('/api/learner/drills', (c) => {
-  const session = db.getSession('session-default');
+app.get('/api/learner/drills', async (c) => {
+  const session = await db.getSession('00000000-0000-0000-0000-000000000001');
   if (!session.isApproved) {
     return c.json({
       ready: false,
@@ -219,12 +227,12 @@ app.get('/api/learner/drills', (c) => {
     }, 403);
   }
 
-  const approvedDrills = db.getApprovedDrills('session-default');
+  const drills = await db.getDrills('00000000-0000-0000-0000-000000000001');
   return c.json({
     ready: true,
     studentName: session.studentName,
     subject: session.subject,
-    drills: approvedDrills
+    drills: drills.filter(d => d.approvedAt !== null)
   });
 });
 
@@ -237,8 +245,8 @@ app.post('/api/learner/flag', async (c) => {
     return c.json({ success: false, error: parsed.error.issues }, 400);
   }
 
-  const flag = db.addFlag(
-    'session-default',
+  const flag = await db.addFlag(
+    '00000000-0000-0000-0000-000000000001',
     parsed.data.drillId,
     parsed.data.question,
     parsed.data.studentNote
@@ -246,22 +254,114 @@ app.post('/api/learner/flag', async (c) => {
 
   return c.json({
     success: true,
-    message: 'Flag queued for next 1:1 session agenda',
+    message: 'Flag queued in PostgreSQL for next 1:1 session agenda',
     flag
   });
 });
 
+// Learner Records Practice Attempt (persisted to public.drill_attempts)
+app.post('/api/learner/attempt', async (c) => {
+  const body = await c.req.json();
+  const parsed = RecordAttemptSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return c.json({ success: false, error: parsed.error.issues }, 400);
+  }
+
+  const attempt = await db.recordAttempt({
+    drillId: parsed.data.drillId,
+    learnerId: parsed.data.learnerId || null,
+    selectedIndex: parsed.data.selectedIndex,
+    isCorrect: parsed.data.isCorrect,
+    timeSpentSeconds: parsed.data.timeSpentSeconds
+  });
+
+  return c.json({
+    success: true,
+    message: 'Attempt logged to PostgreSQL',
+    attempt
+  });
+});
+
+// Get attempts for a drill or session
+app.get('/api/learner/attempts', async (c) => {
+  const drillId = c.req.query('drillId');
+  const attempts = await db.getAttempts(drillId);
+  return c.json({ success: true, attempts });
+});
+
 // Next Session Agenda Aggregation
-app.get('/api/agenda', (c) => {
-  const session = db.getSession('session-default');
-  const drills = db.getDrills('session-default');
-  const flags = db.getFlags('session-default');
+app.get('/api/agenda', async (c) => {
+  const session = await db.getSession('00000000-0000-0000-0000-000000000001');
+  const drills = await db.getDrills('00000000-0000-0000-0000-000000000001');
+  const flags = await db.getFlags('00000000-0000-0000-0000-000000000001');
 
   return c.json({
     session,
     totalDrills: drills.length,
     flags
   });
+});
+
+// Supabase Auth: Sign Up
+app.post('/api/auth/signup', async (c) => {
+  try {
+    const { email, password, fullName, role } = await c.req.json();
+    if (!email || !password) {
+      return c.json({ success: false, error: 'Email and password required' }, 400);
+    }
+
+    const { data, error } = await supabaseServer.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName || email.split('@')[0],
+          role: role || 'learner'
+        }
+      }
+    });
+
+    if (error) return c.json({ success: false, error: error.message }, 400);
+    return c.json({ success: true, user: data.user, session: data.session });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Supabase Auth: Sign In
+app.post('/api/auth/signin', async (c) => {
+  try {
+    const { email, password } = await c.req.json();
+    const { data, error } = await supabaseServer.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) return c.json({ success: false, error: error.message }, 400);
+    return c.json({ success: true, user: data.user, session: data.session });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Supabase Auth: Current User Verification
+app.get('/api/auth/me', async (c) => {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader) {
+    return c.json({ authenticated: false, user: null }, 401);
+  }
+
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  const { data: { user }, error } = await supabaseServer.auth.getUser(token);
+
+  if (error || !user) {
+    return c.json({ authenticated: false, error: error?.message }, 401);
+  }
+
+  return c.json({ authenticated: true, user });
 });
 
 const PORT = 3001;

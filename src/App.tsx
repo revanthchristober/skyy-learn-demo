@@ -16,6 +16,8 @@ import { LearnerPracticeTab } from './components/LearnerPracticeTab';
 import { NextSessionTab } from './components/NextSessionTab';
 import { FlagModal } from './components/FlagModal';
 import { ArchitectureModal } from './components/ArchitectureModal';
+import { AuthModal } from './components/AuthModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PRESETS = {
   fractions: {
@@ -32,7 +34,8 @@ const PRESETS = {
   }
 };
 
-export default function App() {
+function SkyyLearnApp() {
+  const { activeRole } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('tutor');
   const [selectedPreset, setSelectedPreset] = useState<'fractions' | 'finance'>('fractions');
 
@@ -269,9 +272,19 @@ export default function App() {
         onClose={() => setIsArchModalOpen(false)}
       />
 
+      <AuthModal />
+
       <footer className="border-t border-slate-800 bg-[#07090e] px-6 py-3 text-xs text-slate-500 text-center">
-        Skyy Learn Prototype · Full-Stack TypeScript + Node.js + Groq LPU + Zod
+        Skyy Learn Prototype · Full-Stack TypeScript + Node.js + Groq LPU + Zod + Supabase
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <SkyyLearnApp />
+    </AuthProvider>
   );
 }

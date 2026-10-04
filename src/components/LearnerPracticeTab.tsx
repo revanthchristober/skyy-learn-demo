@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle2, AlertCircle, ArrowRight, Flag } from 'lucide-react';
 import { Drill } from '../types';
+import { recordAttemptAPI } from '../api/client';
 
 interface LearnerPracticeTabProps {
   drills: Drill[];
@@ -122,6 +123,11 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
                 onClick={() => {
                   setSelectedAnswer(idx);
                   setShowExplanation(true);
+                  recordAttemptAPI({
+                    drillId: currentDrill.id,
+                    selectedIndex: idx,
+                    isCorrect: idx === currentDrill.correctIndex
+                  }).catch(err => console.warn('Could not record attempt to Postgres:', err));
                 }}
                 className={`w-full text-left p-3.5 rounded-lg border text-sm transition flex items-center justify-between ${style}`}
               >

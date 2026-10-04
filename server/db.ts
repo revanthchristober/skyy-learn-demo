@@ -32,6 +32,16 @@ export interface DBFlaggedTopic {
   timestamp: string;
 }
 
+export interface DBDrillAttempt {
+  id: string;
+  drillId: string;
+  learnerId?: string;
+  selectedIndex: number;
+  isCorrect: boolean;
+  timeSpentSeconds: number;
+  createdAt: string;
+}
+
 export interface DBSession {
   id: string;
   studentName: string;
@@ -47,6 +57,7 @@ export interface DBStore {
   sessions: Record<string, DBSession>;
   drills: Record<string, DBDrill>;
   flags: Record<string, DBFlaggedTopic>;
+  attempts?: Record<string, DBDrillAttempt>;
 }
 
 const defaultStore: DBStore = {
@@ -237,6 +248,37 @@ class Database {
 
   getFlags(sessionId: string = 'session-default'): DBFlaggedTopic[] {
     return Object.values(this.store.flags).filter(f => f.sessionId === sessionId);
+  }
+
+  recordAttempt(attempt: {
+    drillId: string;
+    learnerId?: string;
+    selectedIndex: number;
+    isCorrect: boolean;
+    timeSpentSeconds?: number;
+  }): DBDrillAttempt {
+    const id = `attempt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const entry: DBDrillAttempt = {
+      id,
+      drillId: attempt.drillId,
+      learnerId: attempt.learnerId,
+      selectedIndex: attempt.selectedIndex,
+      isCorrect: attempt.isCorrect,
+      timeSpentSeconds: attempt.timeSpentSeconds || 0,
+      createdAt: new Date().toISOString()
+    };
+    if (!this.store.attempts) {
+      this.store.attempts = {};
+    }
+    this.store.attempts[id] = entry;
+    this.save();
+    return entry;
+  }
+
+  getAttempts(drillId?: string): DBDrillAttempt[] {
+    if (!this.store.attempts) return [];
+    const all = Object.values(this.store.attempts);
+    return drillId ? all.filter(a => a.drillId === drillId) : all;
   }
 }
 

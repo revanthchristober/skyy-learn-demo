@@ -101,7 +101,8 @@ ${JSON.stringify(
           { role: 'user', content: userPrompt }
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.1
+        temperature: 0.1,
+        max_tokens: 600
       });
 
       rawContent = completion.choices[0]?.message?.content || '{}';
@@ -116,7 +117,8 @@ ${JSON.stringify(
           { role: 'user', content: userPrompt }
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.1
+        temperature: 0.1,
+        max_tokens: 600
       });
       rawContent = fallback.choices[0]?.message?.content || '{}';
       completionModel = fallback.model || 'qwen/qwen3.8-27b';

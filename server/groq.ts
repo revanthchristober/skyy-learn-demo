@@ -91,7 +91,8 @@ ${params.tutorToneNote || 'Professional, grounded in adult practical application
         model: 'qwen/qwen3.8-27b',
         messages,
         response_format: { type: 'json_object' },
-        temperature: isRetry ? 0.1 : 0.2 // Lower temperature on retry for precision
+        temperature: isRetry ? 0.1 : 0.2, // Lower temperature on retry for precision
+        max_tokens: 750
       });
 
       const rawContent = completion.choices[0]?.message?.content || '{}';

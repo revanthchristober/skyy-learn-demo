@@ -132,3 +132,24 @@ export async function fetchAgendaAPI(): Promise<{
   if (!res.ok) throw new Error('Failed to fetch agenda data');
   return res.json();
 }
+
+export async function recordAttemptAPI(params: {
+  drillId: string;
+  learnerId?: string | null;
+  selectedIndex: number;
+  isCorrect: boolean;
+  timeSpentSeconds?: number;
+}): Promise<{ success: boolean; attempt: any }> {
+  const res = await fetch('/api/learner/attempt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params)
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Failed to record attempt');
+  }
+
+  return data;
+}

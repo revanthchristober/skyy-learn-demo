@@ -3,90 +3,116 @@
     "session-default": {
       "id": "session-default",
       "studentName": "Marcus Vance",
-      "subject": "Electrical Apprenticeship Math",
-      "tutorNotes": "Marcus struggles with conduit fill calculations and converting mixed fractions of an inch to decimal values on job sites.",
-      "tutorToneNote": "Practical trade electrician framing, no academic fluff",
-      "isApproved": false,
+      "subject": "Fractions & Proportions",
+      "tutorNotes": "Marcus grasps basic division, but got stuck calculating conduit fractions (comparing 3/8\" vs 6/16\"). Confuses cross-multiplication with reciprocal division.",
+      "tutorToneNote": "Keep practice grounded in shop measurements. Do not use pizza or pie metaphors.",
+      "isApproved": true,
       "createdAt": "2026-10-03T17:18:21.262Z",
-      "updatedAt": "2026-10-04T01:33:06.204Z"
+      "updatedAt": "2026-10-04T01:59:23.473Z"
     }
   },
   "drills": {
     "drill-1": {
       "id": "drill-1",
-      "title": "Converting Mixed Fractions for Conduit Sizing",
-      "question": "You are sizing a conduit for a 1/2-inch EMT run. The manufacturer's fill chart requires the cross-sectional area in square inches. If the inner diameter of the 1/2-inch EMT is actually 0.532 inches, what is the decimal equivalent of the mixed fraction 1 1/8 inches, which is the outer diameter often used for rough framing clearance checks?",
+      "title": "Conduit Size Equivalence",
+      "question": "You are cutting a piece of EMT conduit and need to verify if a 6/16-inch section is the same length as a 3/8-inch section. Which statement correctly describes the relationship between these two measurements?",
       "options": [
-        "1.125",
-        "1.083",
-        "1.120",
-        "1.250"
+        "6/16 is larger than 3/8 because 6 is greater than 3.",
+        "6/16 is smaller than 3/8 because 16 is greater than 8.",
+        "6/16 is exactly equal to 3/8.",
+        "6/16 is double the size of 3/8."
       ],
-      "correctIndex": 0,
-      "explanation": "To convert 1 1/8 to a decimal, keep the whole number (1) and convert the fraction 1/8. Since 1 divided by 8 equals 0.125, the total is 1.125. Common errors include misreading 1/8 as 0.12 or confusing it with 1/4 (0.25).",
-      "hint": "Divide the numerator (1) by the denominator (8) and add the result to the whole number.",
-      "approvedAt": null,
+      "correctIndex": 2,
+      "explanation": "To compare fractions, you must find a common denominator. If you multiply both the numerator and denominator of 3/8 by 2, you get 6/16. Therefore, they represent the exact same physical length. A common error is comparing only the numerators (6 > 3) or only the denominators (16 > 8) without accounting for the value of the whole unit.",
+      "hint": "Try converting 3/8 to a fraction with a denominator of 16 to see if the numerators match.",
+      "approvedAt": "2026-10-04T01:59:23.473Z",
       "audit": {
         "status": "verified",
         "confidence": 95,
         "auditorModel": "openai/gpt-oss-20b",
-        "reason": "Answer key verified. Option 0 accurately converts 1 1/8 to 1.125 with correct explanation.",
+        "reason": "Answer key verified. Option 2 accurately solves the problem with sound pedagogical explanation.",
         "suggestedCorrectIndex": null,
-        "verifiedAt": "2026-10-04T01:33:09.504Z"
+        "verifiedAt": "2026-10-04T01:59:13.186Z"
       },
       "sessionId": "session-default",
-      "createdAt": "2026-10-04T01:33:09.504Z"
+      "createdAt": "2026-10-04T01:59:13.186Z"
     },
     "drill-2": {
       "id": "drill-2",
-      "title": "Conduit Fill Percentage Calculation",
-      "question": "You are pulling three 12 AWG THHN conductors into a 3/4-inch EMT conduit. The cross-sectional area of one 12 AWG THHN conductor is 0.084 square inches. The maximum allowable fill for more than two conductors is 40%. If the cross-sectional area of the 3/4-inch EMT is 0.533 square inches, what is the total area occupied by the three conductors?",
+      "title": "Cross-Multiplication for Comparison",
+      "question": "You have two pieces of pipe: one is 5/8 inch and the other is 7/12 inch. To determine which is longer using cross-multiplication, you multiply 5 × 12 and 7 × 8. What does the result indicate?",
       "options": [
-        "0.252 sq in",
-        "0.213 sq in",
-        "0.084 sq in",
-        "0.168 sq in"
+        "5/8 is longer because 60 is greater than 56.",
+        "7/12 is longer because 56 is greater than 60.",
+        "They are equal in length because 60 and 56 are close.",
+        "5/8 is longer because 5 is greater than 7."
       ],
       "correctIndex": 0,
-      "explanation": "The total area occupied is simply the sum of the individual conductor areas. 3 conductors x 0.084 sq in/conductor = 0.252 sq in. The 40% fill rule is used to check if this total is within the limit (0.40 x 0.533 = 0.213 sq in max allowed), but the question asks for the actual occupied area, not the maximum allowed.",
-      "hint": "Multiply the number of conductors by the area of a single conductor. Do not apply the percentage fill limit yet; that is for compliance checking.",
-      "approvedAt": null,
+      "explanation": "Cross-multiplication works by finding a common denominator implicitly. 5/8 becomes 60/96 and 7/12 becomes 56/96. Since 60 > 56, the 5/8 inch pipe is longer. The confusion often arises from thinking the larger product always means the smaller fraction, but in this context, the larger cross-product corresponds to the larger fraction value.",
+      "hint": "Calculate 5 × 12 and 7 × 8. The fraction associated with the larger product is the longer measurement.",
+      "approvedAt": "2026-10-04T01:59:23.473Z",
       "audit": {
         "status": "verified",
         "confidence": 95,
         "auditorModel": "openai/gpt-oss-20b",
-        "reason": "Answer key verified. Option 0 correctly sums three 0.084 sq in conductors to 0.252 sq in and explanation is accurate.",
+        "reason": "Answer key verified. Option 0 accurately solves the problem with sound pedagogical explanation.",
         "suggestedCorrectIndex": null,
-        "verifiedAt": "2026-10-04T01:33:09.504Z"
+        "verifiedAt": "2026-10-04T01:59:13.186Z"
       },
       "sessionId": "session-default",
-      "createdAt": "2026-10-04T01:33:09.504Z"
-    },
-    "drill-3": {
-      "id": "drill-3",
-      "title": "Checking Conduit Fill Compliance",
-      "question": "Using the data from the previous problem: 3/4-inch EMT has a cross-sectional area of 0.533 sq in. You are installing four 10 AWG THHN conductors, each with an area of 0.102 sq in. What is the total area of the conductors, and does it exceed the 40% fill limit?",
-      "options": [
-        "Total: 0.408 sq in; Exceeds limit (Max allowed: 0.213 sq in)",
-        "Total: 0.408 sq in; Within limit (Max allowed: 0.213 sq in)",
-        "Total: 0.102 sq in; Within limit (Max allowed: 0.213 sq in)",
-        "Total: 0.204 sq in; Exceeds limit (Max allowed: 0.213 sq in)"
-      ],
-      "correctIndex": 0,
-      "explanation": "First, calculate total conductor area: 4 x 0.102 = 0.408 sq in. Next, calculate the maximum allowed fill: 40% of 0.533 = 0.2132 sq in. Since 0.408 > 0.213, the fill exceeds the limit. This is a common job site error where electricians forget to check the percentage against the conduit's total area.",
-      "hint": "Calculate the sum of the conductor areas first. Then, calculate 40% of the conduit's area to find the maximum allowed. Compare the two values.",
-      "approvedAt": null,
-      "audit": {
-        "status": "verified",
-        "confidence": 95,
-        "auditorModel": "openai/gpt-oss-20b",
-        "reason": "Tutor accepted auditor correction: set option 0 (\"Total: 0.408 sq in; Exceeds limit (Max allowed: 0.213 sq in)\") as correct answer.",
-        "suggestedCorrectIndex": 0,
-        "verifiedAt": "2026-10-04T01:34:00.000Z"
-      },
-      "sessionId": "session-default",
-      "createdAt": "2026-10-04T01:33:09.504Z"
+      "createdAt": "2026-10-04T01:59:13.186Z"
     }
   },
-  "flags": {}
+  "flags": {
+    "flag-1791079329836-yrho": {
+      "id": "flag-1791079329836-yrho",
+      "sessionId": "session-default",
+      "drillId": "drill-1",
+      "question": "You are cutting a piece of EMT conduit and need to verify if a 6/16-inch section is the same length as a 3/8-inch section. Which statement correctly describes the relationship between these two measurements?",
+      "studentNote": "Still need more practice on measuring sixteenths on conduit benders",
+      "timestamp": "07:32 AM"
+    }
+  },
+  "attempts": {
+    "attempt-1791078666563-clq6": {
+      "id": "attempt-1791078666563-clq6",
+      "drillId": "drill-1",
+      "selectedIndex": 0,
+      "isCorrect": true,
+      "timeSpentSeconds": 12,
+      "createdAt": "2026-10-04T01:51:06.563Z"
+    },
+    "attempt-1791079198497-4obe": {
+      "id": "attempt-1791079198497-4obe",
+      "drillId": "drill-1",
+      "selectedIndex": 2,
+      "isCorrect": true,
+      "timeSpentSeconds": 0,
+      "createdAt": "2026-10-04T01:59:58.497Z"
+    },
+    "attempt-1791079220336-hvkx": {
+      "id": "attempt-1791079220336-hvkx",
+      "drillId": "drill-1",
+      "selectedIndex": 2,
+      "isCorrect": true,
+      "timeSpentSeconds": 0,
+      "createdAt": "2026-10-04T02:00:20.336Z"
+    },
+    "attempt-1791079242788-9x7d": {
+      "id": "attempt-1791079242788-9x7d",
+      "drillId": "drill-1",
+      "selectedIndex": 2,
+      "isCorrect": true,
+      "timeSpentSeconds": 0,
+      "createdAt": "2026-10-04T02:00:42.788Z"
+    },
+    "attempt-1791079301195-nzc9": {
+      "id": "attempt-1791079301195-nzc9",
+      "drillId": "drill-1",
+      "selectedIndex": 2,
+      "isCorrect": true,
+      "timeSpentSeconds": 0,
+      "createdAt": "2026-10-04T02:01:41.195Z"
+    }
+  }
 }
