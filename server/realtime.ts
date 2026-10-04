@@ -95,6 +95,10 @@ export function setRealtimeInstance(instance: ReturnType<typeof initRealtime>) {
   realtimeInstance = instance;
 }
 
+export function getRealtimeInstance() {
+  return realtimeInstance;
+}
+
 export function broadcastRealtime(event: RealtimeEvent) {
   if (realtimeInstance) {
     realtimeInstance.broadcast(event);

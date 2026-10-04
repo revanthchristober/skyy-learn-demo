@@ -1,5 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
-import { RawDrillSchema, GroqOutputSchema, formatZodFeedback } from '../schemas';
+import {
+  RawDrillSchema,
+  GroqOutputSchema,
+  formatZodFeedback,
+  GenerateRequestSchema,
+  UpdateDrillSchema,
+  FlagRequestSchema,
+  RecordAttemptSchema,
+  DrillVerificationItemSchema,
+  BatchVerificationOutputSchema,
+  DrillAuditMetaSchema
+} from '../schemas';
 import { generateValidatedDrills } from '../groq';
 import Groq from 'groq-sdk';
 
@@ -179,6 +190,243 @@ describe('Zod Schema Validation & Boundaries', () => {
         expect(feedback).toContain('1. [Field: "correctIndex"]:');
         expect(feedback).toContain('out of bounds');
       }
+    });
+  });
+
+  describe('RawDrillSchema Min/Max String & Array Boundaries', () => {
+    it('accepts title with exactly 2 characters and rejects 1 character', () => {
+      expect(RawDrillSchema.safeParse({ ...validDrill, title: 'AB' }).success).toBe(true);
+      expect(RawDrillSchema.safeParse({ ...validDrill, title: 'A' }).success).toBe(false);
+    });
+
+    it('accepts title with 100 characters and rejects 101 characters', () => {
+      expect(RawDrillSchema.safeParse({ ...validDrill, title: 'A'.repeat(100) }).success).toBe(true);
+      expect(RawDrillSchema.safeParse({ ...validDrill, title: 'A'.repeat(101) }).success).toBe(false);
+    });
+
+    it('enforces question minimum length of 5 characters', () => {
+      expect(RawDrillSchema.safeParse({ ...validDrill, question: '12345' }).success).toBe(true);
+      expect(RawDrillSchema.safeParse({ ...validDrill, question: '1234' }).success).toBe(false);
+    });
+
+    it('enforces explanation minimum length of 5 characters', () => {
+      expect(RawDrillSchema.safeParse({ ...validDrill, explanation: '12345' }).success).toBe(true);
+      expect(RawDrillSchema.safeParse({ ...validDrill, explanation: '1234' }).success).toBe(false);
+    });
+
+    it('enforces hint minimum length of 3 characters', () => {
+      expect(RawDrillSchema.safeParse({ ...validDrill, hint: '123' }).success).toBe(true);
+      expect(RawDrillSchema.safeParse({ ...validDrill, hint: '12' }).success).toBe(false);
+    });
+
+    it('allows options count between 2 and 6 inclusive', () => {
+      // 2 options
+      expect(RawDrillSchema.safeParse({ ...validDrill, options: ['A', 'B'], correctIndex: 0 }).success).toBe(true);
+      // 6 options
+      expect(RawDrillSchema.safeParse({ ...validDrill, options: ['A', 'B', 'C', 'D', 'E', 'F'], correctIndex: 5 }).success).toBe(true);
+      // 7 options (exceeds max 6)
+      expect(RawDrillSchema.safeParse({ ...validDrill, options: ['A', 'B', 'C', 'D', 'E', 'F', 'G'], correctIndex: 0 }).success).toBe(false);
+    });
+  });
+
+  describe('GenerateRequestSchema Validation', () => {
+    it('validates a compliant tutor generation request with defaults', () => {
+      const valid = {
+        studentName: 'Marcus Vance',
+        subject: 'Fractions',
+        tutorNotes: 'Marcus gets confused comparing 3/8 and 6/16.'
+      };
+      const result = GenerateRequestSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.tutorToneNote).toBe('Keep grounded in practical adult contexts');
+      }
+    });
+
+    it('rejects empty studentName or subject', () => {
+      expect(GenerateRequestSchema.safeParse({
+        studentName: '',
+        subject: 'Fractions',
+        tutorNotes: 'Marcus gets confused.'
+      }).success).toBe(false);
+
+      expect(GenerateRequestSchema.safeParse({
+        studentName: 'Marcus',
+        subject: '',
+        tutorNotes: 'Marcus gets confused.'
+      }).success).toBe(false);
+    });
+
+    it('rejects tutor notes shorter than 5 characters', () => {
+      expect(GenerateRequestSchema.safeParse({
+        studentName: 'Marcus',
+        subject: 'Fractions',
+        tutorNotes: 'Help'
+      }).success).toBe(false);
+    });
+
+    it('preserves custom tutorToneNote when supplied', () => {
+      const result = GenerateRequestSchema.safeParse({
+        studentName: 'Elena',
+        subject: 'Finance',
+        tutorNotes: 'Elena struggled with compound APR.',
+        tutorToneNote: 'Strictly use automotive dealer financing context.'
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.tutorToneNote).toBe('Strictly use automotive dealer financing context.');
+      }
+    });
+  });
+
+  describe('UpdateDrillSchema Validation', () => {
+    it('accepts partial updates to question, explanation, or correctIndex', () => {
+      expect(UpdateDrillSchema.safeParse({ question: 'Updated question wording?' }).success).toBe(true);
+      expect(UpdateDrillSchema.safeParse({ explanation: 'Updated explanation detail.' }).success).toBe(true);
+      expect(UpdateDrillSchema.safeParse({ correctIndex: 2 }).success).toBe(true);
+      expect(UpdateDrillSchema.safeParse({ hint: 'Check the denominator first' }).success).toBe(true);
+    });
+
+    it('rejects negative or floating point correctIndex in updates', () => {
+      expect(UpdateDrillSchema.safeParse({ correctIndex: -1 }).success).toBe(false);
+      expect(UpdateDrillSchema.safeParse({ correctIndex: 1.5 }).success).toBe(false);
+    });
+
+    it('rejects update text shorter than 3 characters', () => {
+      expect(UpdateDrillSchema.safeParse({ question: 'No' }).success).toBe(false);
+      expect(UpdateDrillSchema.safeParse({ explanation: 'No' }).success).toBe(false);
+      expect(UpdateDrillSchema.safeParse({ hint: 'No' }).success).toBe(false);
+    });
+
+    it('validates embedded audit metadata updates', () => {
+      const validAuditUpdate = {
+        audit: {
+          status: 'verified' as const,
+          confidence: 95,
+          auditorModel: 'openai/gpt-oss-20b',
+          reason: 'Tutor approved answer key correction.',
+          suggestedCorrectIndex: null,
+          verifiedAt: new Date().toISOString()
+        }
+      };
+      expect(UpdateDrillSchema.safeParse(validAuditUpdate).success).toBe(true);
+
+      const invalidAuditUpdate = {
+        audit: {
+          status: 'unknown',
+          confidence: 120, // out of range
+          auditorModel: 'model',
+          reason: 'reason',
+          verifiedAt: new Date().toISOString()
+        }
+      };
+      expect(UpdateDrillSchema.safeParse(invalidAuditUpdate).success).toBe(false);
+    });
+  });
+
+  describe('FlagRequestSchema Validation', () => {
+    it('validates a complete learner flag request', () => {
+      const valid = {
+        drillId: 'drill-101',
+        question: 'What is 3/8 converted to 16ths?',
+        studentNote: 'Why did we multiply by 2/2?'
+      };
+      expect(FlagRequestSchema.safeParse(valid).success).toBe(true);
+    });
+
+    it('rejects flag request with empty strings or missing fields', () => {
+      expect(FlagRequestSchema.safeParse({ drillId: '', question: 'Q?', studentNote: 'Note' }).success).toBe(false);
+      expect(FlagRequestSchema.safeParse({ drillId: 'd-1', question: '', studentNote: 'Note' }).success).toBe(false);
+      expect(FlagRequestSchema.safeParse({ drillId: 'd-1', question: 'Q?', studentNote: '' }).success).toBe(false);
+    });
+  });
+
+  describe('RecordAttemptSchema Validation', () => {
+    it('validates a learner practice attempt payload', () => {
+      const valid = {
+        drillId: 'drill-101',
+        selectedIndex: 1,
+        isCorrect: true,
+        timeSpentSeconds: 15
+      };
+      expect(RecordAttemptSchema.safeParse(valid).success).toBe(true);
+    });
+
+    it('rejects negative selectedIndex or negative timeSpentSeconds', () => {
+      expect(RecordAttemptSchema.safeParse({
+        drillId: 'd-1',
+        selectedIndex: -1,
+        isCorrect: false
+      }).success).toBe(false);
+
+      expect(RecordAttemptSchema.safeParse({
+        drillId: 'd-1',
+        selectedIndex: 0,
+        isCorrect: false,
+        timeSpentSeconds: -5
+      }).success).toBe(false);
+    });
+
+    it('validates optional learner UUID when present', () => {
+      const validWithUuid = {
+        drillId: 'drill-1',
+        learnerId: '123e4567-e89b-12d3-a456-426614174000',
+        selectedIndex: 0,
+        isCorrect: true
+      };
+      expect(RecordAttemptSchema.safeParse(validWithUuid).success).toBe(true);
+
+      const invalidWithBadUuid = {
+        drillId: 'drill-1',
+        learnerId: 'not-a-uuid',
+        selectedIndex: 0,
+        isCorrect: true
+      };
+      expect(RecordAttemptSchema.safeParse(invalidWithBadUuid).success).toBe(false);
+    });
+  });
+
+  describe('DrillVerificationItemSchema & BatchVerificationOutputSchema Validation', () => {
+    it('validates compliant verification items and batches', () => {
+      const batch = {
+        verifications: [
+          {
+            drillId: 'drill-1',
+            verdict: 'verified' as const,
+            confidence: 90,
+            reason: 'Answer key is accurate and mathematically sound.',
+            suggestedCorrectIndex: null
+          },
+          {
+            drillId: 'drill-2',
+            verdict: 'flagged' as const,
+            confidence: 40,
+            reason: 'Option 1 appears to be the correct mathematical answer, not Option 0.',
+            suggestedCorrectIndex: 1
+          }
+        ]
+      };
+      expect(BatchVerificationOutputSchema.safeParse(batch).success).toBe(true);
+    });
+
+    it('rejects invalid verdict or out-of-bounds confidence', () => {
+      expect(DrillVerificationItemSchema.safeParse({
+        drillId: 'd-1',
+        verdict: 'approved', // must be 'verified' | 'flagged'
+        confidence: 80,
+        reason: 'Reason explanation.'
+      }).success).toBe(false);
+
+      expect(DrillVerificationItemSchema.safeParse({
+        drillId: 'd-1',
+        verdict: 'verified',
+        confidence: 105, // > 100
+        reason: 'Reason explanation.'
+      }).success).toBe(false);
+    });
+
+    it('rejects empty batch of verifications', () => {
+      expect(BatchVerificationOutputSchema.safeParse({ verifications: [] }).success).toBe(false);
     });
   });
 });
