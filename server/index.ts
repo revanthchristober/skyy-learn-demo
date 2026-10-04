@@ -1,15 +1,27 @@
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
+import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
 import dotenv from 'dotenv';
 import { db } from './db';
 import { generateValidatedDrills } from './groq';
 import { GenerateRequestSchema, UpdateDrillSchema, FlagRequestSchema } from './schemas';
 
-// Load environment variables
+// Load environment variables strictly into server process.env
 dotenv.config({ path: '.env.local' });
 dotenv.config();
 
 const app = new Hono();
+
+// Security Headers & CORS (from Context7 Hono best practices)
+app.use('*', secureHeaders());
+app.use('/api/*', cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 600,
+  credentials: true
+}));
 
 // Global Request Logger
 app.use('*', async (c, next) => {
@@ -25,8 +37,10 @@ app.get('/api/health', (c) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     service: 'skyy-learn-backend',
+    runtime: 'Node.js + Hono (TypeScript)',
     llmProvider: 'Groq Cloud (LPU)',
-    model: 'qwen/qwen3.8-27b'
+    model: 'qwen/qwen3.8-27b',
+    keyIsolation: 'Server-side process.env (0 key exposure to browser)'
   });
 });
 
@@ -43,7 +57,7 @@ app.get('/api/session', (c) => {
   });
 });
 
-// Generate drills (Tutor Action)
+// Generate drills (Tutor Action: Calls server-side Groq LPU)
 app.post('/api/sessions/generate', async (c) => {
   try {
     const body = await c.req.json();
@@ -68,7 +82,7 @@ app.post('/api/sessions/generate', async (c) => {
       isApproved: false
     });
 
-    // Call server-side Groq LPU with Zod validation
+    // Call server-side Groq with Zod validation
     const result = await generateValidatedDrills({
       studentName,
       subject,
@@ -76,7 +90,7 @@ app.post('/api/sessions/generate', async (c) => {
       tutorToneNote
     });
 
-    // Save to persistent DB with approvedAt: null
+    // Save to persistent DB with approvedAt: null (Locked state)
     const createdDrills = db.setDrillsForSession(
       'session-default',
       result.drills.map(d => ({

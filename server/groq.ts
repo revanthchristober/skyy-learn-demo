@@ -1,7 +1,5 @@
+import Groq from 'groq-sdk';
 import { GroqOutputSchema, type GroqOutput, type RawDrill } from './schemas';
-
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const FALLBACK_KEY = 'gsk_placeholder_key';
 
 export interface GroqServiceParams {
   studentName: string;
@@ -15,10 +13,13 @@ export async function generateValidatedDrills(params: GroqServiceParams): Promis
   durationMs: number;
   model: string;
 }> {
-  const apiKey = process.env.GROQ_API_KEY || FALLBACK_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error('GROQ_API_KEY is not configured on server');
+    throw new Error('GROQ_API_KEY is not configured on the server. The key must stay server-side.');
   }
+
+  // Initialize official Groq client on the server
+  const groq = new Groq({ apiKey });
 
   const systemPrompt = `You are Skyy Learn's pedagogical AI engine. Skyy Learn connects adult learners with 1:1 human tutors, using AI to generate targeted between-session drills.
 
@@ -64,30 +65,18 @@ ${params.tutorToneNote || 'Professional, grounded in adult practical application
   while (attempts < maxAttempts) {
     attempts++;
     try {
-      const response = await fetch(GROQ_API_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'qwen/qwen3.8-27b',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.2
-        })
+      // Server-side call to Groq LPU
+      const completion = await groq.chat.completions.create({
+        model: 'qwen/qwen3.8-27b',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.2
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Groq HTTP ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      const rawContent = data.choices?.[0]?.message?.content || '{}';
+      const rawContent = completion.choices[0]?.message?.content || '{}';
 
       // Parse JSON
       let rawJson: unknown;
@@ -111,7 +100,7 @@ ${params.tutorToneNote || 'Professional, grounded in adult practical application
       return {
         drills: validated.drills,
         durationMs,
-        model: data.model || 'qwen/qwen3.8-27b'
+        model: completion.model || 'qwen/qwen3.8-27b'
       };
     } catch (err: unknown) {
       lastError = err instanceof Error ? err : new Error(String(err));
