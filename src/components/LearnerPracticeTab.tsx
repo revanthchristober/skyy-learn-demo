@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { CheckCircle2, AlertCircle, ArrowRight, Flag } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  AlertCircle, 
+  ArrowRight, 
+  Flag, 
+  HelpCircle, 
+  Sparkles,
+  ChevronRight,
+  RotateCcw
+} from 'lucide-react';
 import { Drill } from '../types';
 import { recordAttemptAPI } from '../api/client';
 
@@ -25,10 +34,13 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
 
   if (!drills || drills.length === 0) {
     return (
-      <div className="max-w-xl mx-auto p-8 border border-slate-800 rounded-lg bg-[#0b0e14] text-center space-y-3">
+      <div className="max-w-md mx-auto p-8 border border-slate-800/80 rounded-2xl bg-[#131b2e] text-center space-y-3 shadow-sm">
+        <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 mx-auto flex items-center justify-center">
+          <HelpCircle className="w-6 h-6" />
+        </div>
         <h3 className="text-sm font-semibold text-white">No Drills Currently Available</h3>
-        <p className="text-xs text-slate-400">
-          Your tutor has not yet approved practice drills for this session. Please check back after your 1:1 session is reviewed.
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Your tutor has not yet approved practice drills for this session. Please check back once your 1:1 notes are reviewed.
         </p>
       </div>
     );
@@ -36,11 +48,13 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
 
   const currentDrill = drills[currentDrillIndex] || drills[0];
 
-  // Only show the fraction comparison bar when the problem actually concerns fraction measurements
+  // Visual comparison bar for fraction measurements
   const isFractionProblem = 
     currentDrill.question.includes('3/8') || 
     currentDrill.question.includes('6/16') ||
     currentDrill.question.toLowerCase().includes('fraction');
+
+  const progressPercent = Math.round(((currentDrillIndex + 1) / drills.length) * 100);
 
   const handleNext = () => {
     setSelectedAnswer(null);
@@ -54,65 +68,82 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
   };
 
   return (
-    <div className="max-w-2xl mx-auto w-full space-y-6">
-      <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-3">
-        <div>
-          <span className="font-semibold text-slate-200">{studentName}</span>
-          <span className="mx-1.5">·</span>
-          <span>{subject}</span>
+    <div className="max-w-2xl mx-auto w-full space-y-5">
+      {/* Learner Session & Progress Header */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-white">{studentName}</span>
+            <span className="text-slate-600">·</span>
+            <span className="text-slate-400">{subject}</span>
+          </div>
+          <span className="text-slate-400 font-medium font-mono text-[11px]">
+            {currentDrillIndex + 1} of {drills.length}
+          </span>
         </div>
-        <div className="font-mono">
-          Question {currentDrillIndex + 1} of {drills.length}
+
+        {/* Smooth animated progress bar */}
+        <div className="w-full h-2 bg-[#131b2e] rounded-full overflow-hidden border border-slate-800">
+          <div 
+            className="h-full bg-gradient-to-r from-indigo-500 to-sky-400 rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
       </div>
 
-      {/* Drill Card */}
-      <div className="border border-slate-800 rounded-lg p-6 bg-[#0b0e14] space-y-6">
+      {/* Main Practice Problem Card */}
+      <div className="bg-[#131b2e] border border-slate-800/80 rounded-2xl p-6 shadow-sm space-y-6">
         <div>
-          <div className="text-xs font-semibold text-blue-400 mb-1">
+          <span className="inline-block text-[11px] font-semibold text-indigo-400 uppercase tracking-wider mb-1.5">
             {currentDrill.title}
-          </div>
-          <h3 className="text-lg font-semibold text-white leading-snug">
+          </span>
+          <h3 className="text-base sm:text-lg font-semibold text-white leading-snug">
             {currentDrill.question}
           </h3>
         </div>
 
-        {/* Visual reference: only rendered for relevant fraction questions */}
+        {/* Visual reference for fraction problems */}
         {isFractionProblem && (
-          <div className="bg-[#07090e] border border-slate-800 rounded p-3.5 space-y-2">
-            <div className="text-xs text-slate-400 font-medium">Visual proportion comparison</div>
-            <div className="space-y-1.5 text-xs">
+          <div className="bg-[#0d1322] border border-slate-800 rounded-xl p-4 space-y-2.5">
+            <div className="text-xs text-slate-400 font-medium">Clearance Comparison</div>
+            <div className="space-y-2 text-xs">
               <div className="flex items-center gap-3">
-                <span className="font-mono text-slate-300 w-10">3/8"</span>
-                <div className="flex-1 h-4 bg-slate-900 rounded overflow-hidden flex border border-slate-800">
-                  <div className="w-[37.5%] bg-blue-600 h-full"></div>
+                <span className="font-mono text-slate-300 w-12 text-right">3/8"</span>
+                <div className="flex-1 h-3.5 bg-slate-900 rounded-md overflow-hidden flex border border-slate-800">
+                  <div className="w-[37.5%] bg-indigo-500 h-full rounded-sm"></div>
                 </div>
+                <span className="text-[11px] font-mono text-slate-400 w-12">0.375"</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="font-mono text-slate-300 w-10">6/16"</span>
-                <div className="flex-1 h-4 bg-slate-900 rounded overflow-hidden flex border border-slate-800">
-                  <div className="w-[37.5%] bg-sky-500 h-full"></div>
+                <span className="font-mono text-slate-300 w-12 text-right">6/16"</span>
+                <div className="flex-1 h-3.5 bg-slate-900 rounded-md overflow-hidden flex border border-slate-800">
+                  <div className="w-[37.5%] bg-sky-400 h-full rounded-sm"></div>
                 </div>
+                <span className="text-[11px] font-mono text-slate-400 w-12">0.375"</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Options */}
+        {/* Choices */}
         <div className="space-y-2.5">
           {currentDrill.options?.map((option, idx) => {
             const isSelected = selectedAnswer === idx;
             const isCorrect = idx === currentDrill.correctIndex;
             const showValidation = selectedAnswer !== null;
 
-            let style = "border-slate-800 bg-[#07090e] text-slate-300 hover:border-slate-700 hover:bg-slate-900/40";
+            let cardStyle = "border-slate-800 bg-[#0d1322] text-slate-200 hover:border-slate-700 hover:bg-[#11192d]";
+            let letterStyle = "bg-slate-800 text-slate-400";
+
             if (showValidation) {
               if (isCorrect) {
-                style = "border-emerald-600 bg-emerald-950/20 text-emerald-200 font-medium";
+                cardStyle = "border-emerald-500 bg-emerald-950/25 text-emerald-200 shadow-sm";
+                letterStyle = "bg-emerald-500/20 text-emerald-300";
               } else if (isSelected && !isCorrect) {
-                style = "border-rose-600 bg-rose-950/20 text-rose-200";
+                cardStyle = "border-rose-500 bg-rose-950/25 text-rose-200 shadow-sm";
+                letterStyle = "bg-rose-500/20 text-rose-300";
               } else {
-                style = "border-slate-800/50 bg-[#07090e]/50 text-slate-500";
+                cardStyle = "border-slate-800/40 bg-[#0d1322]/40 text-slate-500 opacity-60";
               }
             }
 
@@ -129,14 +160,20 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
                     isCorrect: idx === currentDrill.correctIndex
                   }).catch(err => console.warn('Could not record attempt to Postgres:', err));
                 }}
-                className={`w-full text-left p-3.5 rounded-lg border text-sm transition flex items-center justify-between ${style}`}
+                className={`w-full text-left p-4 rounded-xl border text-xs sm:text-sm transition flex items-center justify-between group active:scale-[0.99] ${cardStyle}`}
               >
-                <span>{option}</span>
+                <div className="flex items-center gap-3">
+                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold transition ${letterStyle}`}>
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <span className="font-medium">{option}</span>
+                </div>
+
                 {showValidation && isCorrect && (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 )}
                 {showValidation && isSelected && !isCorrect && (
-                  <AlertCircle className="w-4 h-4 text-rose-400" />
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                 )}
               </button>
             );
@@ -145,57 +182,65 @@ export const LearnerPracticeTab: React.FC<LearnerPracticeTabProps> = ({
 
         {/* Hint Accordion */}
         {!showExplanation && (
-          <div>
+          <div className="pt-1">
             <button
               onClick={() => setShowHint(!showHint)}
-              className="text-xs text-blue-400 hover:text-blue-300 underline"
+              className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition"
             >
-              {showHint ? 'Hide hint' : 'Show hint'}
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>{showHint ? 'Hide hint' : 'Need a hint?'}</span>
             </button>
             {showHint && (
-              <p className="mt-2 text-xs text-slate-300 bg-[#07090e] p-3 rounded border border-slate-800">
+              <p className="mt-2 text-xs text-slate-300 bg-[#0d1322] p-3.5 rounded-xl border border-slate-800 leading-relaxed">
                 {currentDrill.hint}
               </p>
             )}
           </div>
         )}
 
-        {/* Explanation feedback */}
+        {/* Pedagogical Explanation Feedback */}
         {showExplanation && (
-          <div className={`p-4 rounded-lg border text-xs space-y-1.5 ${
+          <div className={`p-4 rounded-xl border text-xs space-y-1.5 transition ${
             selectedAnswer === currentDrill.correctIndex
               ? 'bg-emerald-950/20 border-emerald-800/40 text-emerald-200'
               : 'bg-amber-950/20 border-amber-800/40 text-amber-200'
           }`}>
-            <div className="font-semibold">
-              {selectedAnswer === currentDrill.correctIndex ? 'Correct' : 'Explanation'}
+            <div className="font-semibold flex items-center gap-1.5">
+              {selectedAnswer === currentDrill.correctIndex ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>Great job! Correct calculation</span>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-4 h-4 text-amber-400" />
+                  <span>Review the reasoning</span>
+                </>
+              )}
             </div>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-slate-300 leading-relaxed pt-0.5">
               {currentDrill.explanation}
             </p>
           </div>
         )}
 
-        {/* Actions: Flag for tutor & next question */}
-        <div className="border-t border-slate-800 pt-4 flex items-center justify-between">
+        {/* Actions bar */}
+        <div className="border-t border-slate-800/80 pt-4 flex items-center justify-between gap-3">
           <button
             onClick={onOpenFlagModal}
-            className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 underline"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-[#0d1322] text-xs text-slate-400 hover:text-amber-300 transition"
           >
-            <Flag className="w-3.5 h-3.5" />
-            Flag this question for my next 1:1 session
+            <Flag className="w-3.5 h-3.5 text-amber-400" />
+            <span>Still confused? Flag for tutor</span>
           </button>
 
-          {selectedAnswer !== null && (
+          {showExplanation && (
             <button
               onClick={handleNext}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1"
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-md shadow-indigo-600/20"
             >
-              {currentDrillIndex < drills.length - 1 ? (
-                <>Next question <ArrowRight className="w-3.5 h-3.5" /></>
-              ) : (
-                <>Review session summary <ArrowRight className="w-3.5 h-3.5" /></>
-              )}
+              <span>{currentDrillIndex < drills.length - 1 ? 'Next Question' : 'Complete Session'}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle, ShieldCheck, Database, Server, Cpu } from 'lucide-react';
+import { X, ShieldCheck, Database, Server, Cpu, KeyRound, Sparkles } from 'lucide-react';
 
 interface ArchitectureModalProps {
   isOpen: boolean;
@@ -13,75 +13,71 @@ export const ArchitectureModal: React.FC<ArchitectureModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-      <div className="bg-[#0b0e14] border border-slate-800 rounded-lg max-w-xl w-full p-6 space-y-5 max-h-[85vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-800 pb-3">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#131b2e] border border-slate-800/80 rounded-2xl max-w-xl w-full p-6 space-y-5 max-h-[85vh] overflow-y-auto shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/60 transition"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-center gap-3 border-b border-slate-800/80 pb-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+            <Cpu className="w-5 h-5" />
+          </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">Full-Stack Technical Architecture</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Implemented 0-to-1 prototype aligned with Skyy Tech standards</p>
+            <h3 className="text-sm font-semibold text-white">System Architecture &amp; Stack</h3>
+            <p className="text-xs text-slate-400">Production-grade foundation for human-in-the-loop tutoring</p>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-white">
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        <div className="space-y-4 text-xs text-slate-300">
-          <div className="border border-slate-800 rounded p-3.5 bg-[#07090e] space-y-2">
-            <div className="font-semibold text-slate-200 flex items-center gap-2">
-              <Server className="w-4 h-4 text-blue-400" />
-              1. Node.js + TypeScript Backend (Hono)
+        <div className="space-y-3.5 text-xs text-slate-300">
+          <div className="border border-slate-800/80 rounded-xl p-4 bg-[#0d1322] space-y-1.5">
+            <div className="font-semibold text-white flex items-center gap-2">
+              <Server className="w-4 h-4 text-indigo-400" />
+              <span>1. Node.js + Hono TypeScript REST Backend</span>
             </div>
-            <p className="text-slate-400 leading-relaxed">
-              Real REST API architecture running on port 3001. All Groq credentials remain isolated on the server. The browser communicates exclusively via validated REST endpoints (<code>/api/sessions/generate</code>, <code>/api/drills/approve-all</code>, <code>/api/learner/drills</code>).
+            <p className="text-slate-400 leading-relaxed text-[11px]">
+              Port 3001 service isolating all LLM and database credentials server-side. The client accesses data exclusively via authenticated REST endpoints with strict request verification.
             </p>
           </div>
 
-          <div className="border border-slate-800 rounded p-3.5 bg-[#07090e] space-y-2">
-            <div className="font-semibold text-slate-200 flex items-center gap-2">
+          <div className="border border-slate-800/80 rounded-xl p-4 bg-[#0d1322] space-y-1.5">
+            <div className="font-semibold text-white flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              2. Zod Schema Validation &amp; Server-Enforced Guardrails
+              <span>2. Zod Schema Verification &amp; Self-Correction Loop</span>
             </div>
-            <p className="text-slate-400 leading-relaxed">
-              Every Groq LLM completion is parsed against strict Zod schemas ensuring integer bounds on <code>correctIndex</code>, distinct option choices, and non-empty explanations with self-correction feedback retries. The learner endpoint rejects requests with HTTP 403 until the tutor explicitly signs off.
+            <p className="text-slate-400 leading-relaxed text-[11px]">
+              Every model completion is parsed against strict Zod schemas ensuring index bounds, unique options, and clear explanations. Incomplete outputs feed structured error diagnostics back into the model for automatic self-correction.
             </p>
           </div>
 
-          <div className="border border-purple-900/40 rounded p-3.5 bg-purple-950/15 space-y-2">
-            <div className="font-semibold text-purple-300 flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-purple-400" />
-              3. Dual-Model Architecture: Independent Correctness Pass
+          <div className="border border-slate-800/80 rounded-xl p-4 bg-[#0d1322] space-y-1.5">
+            <div className="font-semibold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span>3. Dual-Pass Quality Engine: Independent Auditor</span>
             </div>
-            <p className="text-slate-300 text-xs leading-relaxed">
-              To prevent answer-key hallucinations, a second, cheaper LLM (<code>openai/gpt-oss-20b</code>) acts as an automated auditor. It independently calculates each solution from scratch and verifies that <code>options[correctIndex]</code> is unequivocal. Any mathematical ambiguity or mismatched index is immediately flagged with auditor confidence and suggested corrections for human tutor sign-off.
+            <p className="text-slate-400 leading-relaxed text-[11px]">
+              To eliminate answer-key errors before student practice, an independent auditor model re-solves each drill from scratch. Mathematical ambiguities or misaligned keys are flagged directly to the tutor before approval.
             </p>
           </div>
 
-          <div className="border border-slate-800 rounded p-3.5 bg-[#07090e] space-y-2">
-            <div className="font-semibold text-slate-200 flex items-center gap-2">
+          <div className="border border-slate-800/80 rounded-xl p-4 bg-[#0d1322] space-y-1.5">
+            <div className="font-semibold text-white flex items-center gap-2">
               <Database className="w-4 h-4 text-sky-400" />
-              4. Relational Data Models &amp; Persistence
+              <span>4. PostgreSQL 17 Relational Storage &amp; GoTrue Auth</span>
             </div>
-            <p className="text-slate-400 leading-relaxed font-mono text-[11px]">
-              DBSession (tutor notes, approval status) · DBDrill (id, correctIndex, audit status, approvedAt) · DBFlaggedTopic (student notes, agenda queue). State persists to disk and survives restarts and page refreshes.
+            <p className="text-slate-400 leading-relaxed text-[11px]">
+              Live Supabase connection pool hosting 6 tables (<span className="text-slate-300">profiles, sessions, session_notes, drills, drill_attempts, flagged_topics</span>) with active JWT validation and Row-Level Security.
             </p>
-          </div>
-
-          <div className="border border-slate-800 rounded p-3.5 bg-[#07090e] space-y-2">
-            <div className="font-semibold text-slate-200 flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-amber-400" />
-              4. Production Scaling Roadmap
-            </div>
-            <ul className="list-disc pl-4 space-y-1 text-slate-400">
-              <li><strong>Live Video / Whiteboard:</strong> LiveKit WebRTC SFU for &lt;100ms latency video + WebSocket synchronized notes.</li>
-              <li><strong>Marketplace Payments:</strong> Stripe Connect for escrow hold during 1:1 session booking and automated payout upon completion.</li>
-            </ul>
           </div>
         </div>
 
-        <div className="flex justify-end pt-2 border-t border-slate-800">
+        <div className="flex justify-end pt-2 border-t border-slate-800/80">
           <button
             onClick={onClose}
-            className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs transition"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-medium transition"
           >
             Close Blueprint
           </button>
