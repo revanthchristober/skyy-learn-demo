@@ -4,6 +4,9 @@ Human-in-the-loop AI practice engine for 1:1 tutors and adult learners.
 
 Skyy Learn turns messy tutor session notes into verified practice questions. The core safety principle is: **nothing is shared until the human tutor approves**. Every drill is generated via a fast primary LLM, audited by an independent secondary LLM, and gated behind human tutor verification before a learner can view or answer it.
 
+- **Live Production URL**: [https://skyy-learn-demo.vercel.app](https://skyy-learn-demo.vercel.app)
+- **Health & Diagnostics**: [https://skyy-learn-demo.vercel.app/api/health](https://skyy-learn-demo.vercel.app/api/health)
+
 ---
 
 ## Table of Contents
@@ -13,10 +16,9 @@ Skyy Learn turns messy tutor session notes into verified practice questions. The
    - [Dual-LLM Pipeline (Generation + Verification)](#dual-llm-pipeline-generation--verification)
    - [The Approval Rule & Access Gating](#the-approval-rule--access-gating)
    - [Real-Time WebSocket Synchronization](#real-time-websocket-synchronization)
-2. [Deployment Guide](#deployment-guide)
-   - [Database: Neon Serverless Postgres](#1-database-neon-serverless-postgres)
-   - [Backend: Render or Fly.io (WebSockets)](#2-backend-render-or-flyio)
-   - [Frontend: Vercel (SPA)](#3-frontend-vercel)
+2. [Deployment & Infrastructure](#deployment--infrastructure)
+   - [Production Deployment (Vercel + Supabase Cloud)](#1-production-deployment-vercel--supabase-cloud)
+   - [Persistent WebSockets Container (Render / Fly.io)](#2-persistent-websockets-container-render--flyio)
 3. [Architectural Tradeoffs](#architectural-tradeoffs)
 4. [Adding Payments (Stripe Connect)](#adding-payments-stripe-connect)
 5. [Adding Video (LiveKit)](#adding-video-livekit)
@@ -30,30 +32,31 @@ Skyy Learn turns messy tutor session notes into verified practice questions. The
 
 ```
                       +-----------------------------+
-                      |   Vercel (Frontend SPA)     |
-                      |   React 19 + Vite + Tailwind|
+                      |   Vercel (Production Edge)  |
+                      |   React 19 SPA + Hono API   |
                       +--------------+--------------+
                                      |
-               HTTPS (REST)          |          WSS (WebSockets)
+               HTTPS (REST / API)    |          WSS (Local & Container Dev)
                      |               |                 |
                      v               v                 v
           +-------------------------------------------------+
-          |           Render / Fly.io (Backend)             |
-          |       Node.js 22 + Hono + ws (/ws server)       |
+          |           Hono Backend API (Node.js 20+)        |
+          |       Serverless on Vercel / State on Fly.io    |
           +----------+-----------------------+--------------+
                      |                       |
                      v                       v
       +-----------------------------+  +-------------------------------+
-      |    Dual-LLM Engine (Groq)   |  |   Neon Serverless Postgres    |
-      |  1. Generator: Qwen 3.8 27B |  |   Connection Pooler (PgBouncer) |
-      |  2. Auditor: GPT-OSS 20B    |  |   Profiles, Sessions, Drills  |
+      |    Dual-LLM Engine (Groq)   |  |   PostgreSQL 17 Database      |
+      |  1. Generator: Qwen 3.8 27B |  |   Supabase / Neon Connection  |
+      |  2. Auditor: GPT-OSS 20B    |  |   Pooler (PgBouncer IPv4:6543)|
       +-----------------------------+  +-------------------------------+
 ```
 
-The system is split into two specialized runtime environments:
-- **Client Tier (Vercel)**: Static single-page application served over global CDN edge. Handles role switching (tutor vs learner), optimistic UI updates, tactile paper aesthetic, and WebSocket event consumption.
-- **Server Tier (Render / Fly.io)**: Long-lived Node.js container running Hono. Handles LLM generation, Zod schema validation, independent audit passes, database persistence, and persistent WebSocket connections (`/ws`) for bidirectional multi-client push.
-- **Storage Tier (Neon Postgres)**: Relational storage with connection pooling, table constraints, and foreign key cascades.
+The system is architected for clean separation between presentation, inference, and persistence:
+- **Client & API Tier (Vercel)**: Static single-page application served over global CDN edge alongside serverless API routes (`/api/*`). Handles role switching (tutor vs learner), optimistic UI updates, tactile paper aesthetic, and server-side secret isolation.
+- **Inference Tier (Groq LPU)**: Fast generation (`qwen/qwen3.8-27b`) followed by an independent correctness audit (`openai/gpt-oss-20b`), completing in under 2.5 seconds total.
+- **Storage Tier (PostgreSQL 17 Cloud)**: Relational storage with connection pooling, table constraints, and foreign key cascades.
+- **Real-Time Push**: Native WebSockets (`/ws`) for bidirectional sync on local development and persistent container environments (Fly.io/Render). On serverless edge runtimes where persistent TCP sockets are constrained, client interfaces automatically fall back to responsive state polling.
 
 ---
 
@@ -148,89 +151,60 @@ To avoid clunky page refreshes during live tutoring sessions, a native WebSocket
 
 ---
 
-## Deployment Guide
+## Deployment & Infrastructure
 
-### 1. Database: Neon Serverless Postgres
+### 1. Production Deployment (Vercel + Supabase Cloud)
 
-Neon provides serverless PostgreSQL with connection pooling (PgBouncer) and branching.
+The production demo is live on Vercel backed by Supabase PostgreSQL 17:
+- **Live App**: [https://skyy-learn-demo.vercel.app](https://skyy-learn-demo.vercel.app)
+- **Live API Health Check**: [https://skyy-learn-demo.vercel.app/api/health](https://skyy-learn-demo.vercel.app/api/health)
 
-1. Create a Neon project at [neon.tech](https://neon.tech).
-2. Copy your pooled connection string:
-   ```bash
-   postgresql://skyy_owner:<password>@ep-xyz-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require
-   ```
-3. Run the schema migrations:
-   ```bash
-   NEON_DATABASE_URL="postgresql://skyy_owner:<password>@ep-xyz-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require" npm run migrate
-   ```
-   This executes `server/schema.sql` and sets up `profiles`, `sessions`, `session_notes`, `drills`, `drill_attempts`, and `flagged_topics`.
+#### Vercel Environment Variables:
+```bash
+GROQ_API_KEY="gsk_..."
+SUPABASE_DB_HOST="aws-0-ap-southeast-1.pooler.supabase.com"
+SUPABASE_DB_PORT="6543"
+SUPABASE_DB_USER="postgres.bturhosivfvyvanztkjb"
+SUPABASE_DB_PASSWORD="..."
+SUPABASE_DB_NAME="postgres"
+SUPABASE_URL="https://bturhosivfvyvanztkjb.supabase.co"
+SUPABASE_ANON_KEY="..."
+```
+
+#### Deploying Updates:
+```bash
+npm run build
+npx vercel --prod
+```
+The Hono backend is bundled into Vercel Serverless Functions via `api/[...all].js` with automatic route redirection configured in `vercel.json`.
 
 ---
 
-### 2. Backend: Render or Fly.io
+### 2. Persistent WebSockets Container (Render / Fly.io)
 
-The backend requires a persistent Node.js environment to maintain active WebSocket connections.
+For deployments requiring persistent, long-lived bidirectional WebSocket connections (`/ws`) without serverless timeout constraints:
 
 #### Option A: Deploying to Fly.io
-
-Fly.io runs the container close to users with native WebSocket support.
-
-1. Install Fly CLI:
-   ```bash
-   curl -L https://fly.io/install.sh | sh
-   ```
-2. Authenticate:
-   ```bash
-   fly auth login
-   ```
-3. Initialize the app using the included `fly.toml` and `Dockerfile`:
-   ```bash
-   fly launch --no-deploy
-   ```
-4. Set production secrets:
-   ```bash
-   fly secrets set \
-     NEON_DATABASE_URL="postgresql://skyy_owner:<password>@ep-xyz-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require" \
-     GROQ_API_KEY="gsk_..." \
-     NODE_ENV="production"
-   ```
-5. Deploy:
-   ```bash
-   fly deploy
-   ```
-6. Verify health check:
-   ```bash
-   curl https://skyy-learn-backend.fly.dev/api/health
-   ```
+Fly.io runs the container with native WebSocket support:
+```bash
+fly auth login
+fly launch --no-deploy
+fly secrets set \
+  GROQ_API_KEY="gsk_..." \
+  SUPABASE_DB_HOST="aws-0-ap-southeast-1.pooler.supabase.com" \
+  SUPABASE_DB_PORT="6543" \
+  SUPABASE_DB_USER="postgres.bturhosivfvyvanztkjb" \
+  SUPABASE_DB_PASSWORD="..." \
+  SUPABASE_DB_NAME="postgres" \
+  NODE_ENV="production"
+fly deploy
+```
 
 #### Option B: Deploying to Render
-
-Render supports Web Services with persistent WebSockets via the included `render.yaml`.
-
+Render supports Web Services with persistent WebSockets via the included `render.yaml`:
 1. Go to [dashboard.render.com](https://dashboard.render.com).
 2. Select **Blueprints** and connect your GitHub repository.
-3. Render detects `render.yaml` and provisions the `skyy-learn-backend` web service.
-4. Set `NEON_DATABASE_URL` and `GROQ_API_KEY` in the environment variables tab.
-5. Deploy service.
-
----
-
-### 3. Frontend: Vercel
-
-The frontend is deployed as a static single-page application.
-
-1. Install Vercel CLI or connect via GitHub:
-   ```bash
-   npx vercel
-   ```
-2. Set environment variables on Vercel:
-   - `VITE_API_BASE_URL`: `https://skyy-learn-backend.fly.dev` (or Render URL)
-   - `VITE_WS_URL`: `wss://skyy-learn-backend.fly.dev/ws`
-3. Deploy to production:
-   ```bash
-   npx vercel --prod
-   ```
-4. `vercel.json` automatically handles SPA client-side routing rewrites (`/(.*)` -> `/index.html`) and security headers.
+3. Render detects `render.yaml` and provisions the `skyy-learn-backend` web service with the configured health check at `/api/health`.
 
 ---
 

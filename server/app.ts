@@ -37,14 +37,16 @@ export function createApp() {
   const api = new Hono();
 
   // Health check
-  api.get('/health', (c) => {
+  api.get('/health', async (c) => {
+    const isDbConnected = await db.ensureConnected();
     return c.json({
-      status: 'healthy',
+      status: isDbConnected ? 'healthy' : 'degraded',
       timestamp: new Date().toISOString(),
       service: 'skyy-learn-backend',
       runtime: 'Node.js + Hono (TypeScript)',
-      database: 'Supabase PostgreSQL 17 (Cloud)',
-      host: 'db.bturhosivfvyvanztkjb.supabase.co',
+      database: isDbConnected ? 'Supabase PostgreSQL 17 (Cloud)' : 'Local File Fallback',
+      databaseConnected: isDbConnected,
+      host: isDbConnected ? (process.env.SUPABASE_DB_HOST || 'db.bturhosivfvyvanztkjb.supabase.co') : 'local',
       authProvider: 'Supabase GoTrue (JWT)',
       tables: ['profiles', 'sessions', 'session_notes', 'drills', 'drill_attempts', 'flagged_topics'],
       llmProvider: 'Groq Cloud (LPU)',

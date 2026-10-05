@@ -28,15 +28,7 @@ export async function generateValidatedDrills(
 ): Promise<GenerationResult> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey && !injectedClient) {
-    console.warn('[Groq Engine] No GROQ_API_KEY configured. Generating high-fidelity fallback drills for:', params.subject);
-    const fallbackDrills = generateDeterministicDrills(params);
-    return {
-      drills: fallbackDrills,
-      durationMs: 380,
-      model: 'qwen/qwen3.8-27b (demo-fallback)',
-      attempts: 1,
-      retryLogs: []
-    };
+    throw new Error('GROQ_API_KEY is not configured on the server. Please set GROQ_API_KEY in your environment.');
   }
 
   // Initialize official Groq client on the server (or use injectedClient for mocking)

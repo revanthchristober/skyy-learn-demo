@@ -17,6 +17,10 @@ export class PostgresDatabase {
   }
 
   private initPool() {
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true') {
+      return;
+    }
+
     const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
     const password = process.env.SUPABASE_DB_PASSWORD;
     const host = process.env.SUPABASE_DB_HOST || 'db.bturhosivfvyvanztkjb.supabase.co';
@@ -63,6 +67,23 @@ export class PostgresDatabase {
     } catch (err) {
       console.warn('[PostgreSQL Init Error]: Using fallback storage:', err);
       this.isConnected = false;
+    }
+  }
+
+  async ensureConnected(): Promise<boolean> {
+    if (!this.pool) {
+      this.initPool();
+    }
+    if (!this.pool) return false;
+    if (this.isConnected) return true;
+
+    try {
+      await this.pool.query('SELECT 1;');
+      this.isConnected = true;
+      return true;
+    } catch (err) {
+      this.isConnected = false;
+      return false;
     }
   }
 
@@ -148,12 +169,12 @@ export class PostgresDatabase {
   }
 
   async getSession(id: string = '00000000-0000-0000-0000-000000000001'): Promise<DBSession> {
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileDb.getSession('session-default');
     }
 
     try {
-      const res = await this.pool.query(
+      const res = await this.pool!.query(
         `SELECT s.id, s.student_name, s.subject, s.is_approved, s.created_at, s.updated_at,
                 n.tutor_notes, n.pedagogical_tone
          FROM public.sessions s
@@ -191,13 +212,13 @@ export class PostgresDatabase {
     // Always keep fileDb in sync
     fileDb.updateSession('session-default', updates);
 
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileDb.getSession('session-default');
     }
 
     try {
       if (updates.studentName || updates.subject || updates.isApproved !== undefined) {
-        await this.pool.query(
+        await this.pool!.query(
           `UPDATE public.sessions
            SET student_name = COALESCE($2, student_name),
                subject = COALESCE($3, subject),
@@ -209,10 +230,10 @@ export class PostgresDatabase {
       }
 
       if (updates.tutorNotes || updates.tutorToneNote) {
-        await this.pool.query(
+        await this.pool!.query(
           `INSERT INTO public.session_notes (session_id, tutor_notes, pedagogical_tone)
            VALUES ($1, $2, $3)
-           ON CONFLICT (id) DO UPDATE
+           ON CONFLICT (session_id) DO UPDATE
            SET tutor_notes = EXCLUDED.tutor_notes,
                pedagogical_tone = EXCLUDED.pedagogical_tone;`,
           [id, updates.tutorNotes || '', updates.tutorToneNote || '']
@@ -227,12 +248,12 @@ export class PostgresDatabase {
   }
 
   async getDrills(sessionId: string = '00000000-0000-0000-0000-000000000001'): Promise<DBDrill[]> {
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileDb.getDrills('session-default');
     }
 
     try {
-      const res = await this.pool.query(
+      const res = await this.pool!.query(
         `SELECT id, session_id, title, question, options, correct_index, explanation, hint,
                 approved_at, audit_status, audit_confidence, audit_reason, audit_model,
                 suggested_correct_index, created_at
@@ -278,19 +299,19 @@ export class PostgresDatabase {
   ): Promise<DBDrill[]> {
     fileDb.setDrillsForSession('session-default', drills);
 
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileDb.getDrills('session-default');
     }
 
     try {
       // Clear old drills for this session
-      await this.pool.query('DELETE FROM public.drills WHERE session_id = $1;', [sessionId]);
+      await this.pool!.query('DELETE FROM public.drills WHERE session_id = $1;', [sessionId]);
 
       const created: DBDrill[] = [];
       const now = new Date().toISOString();
 
       for (const d of drills) {
-        await this.pool.query(
+        await this.pool!.query(
           `INSERT INTO public.drills (
             id, session_id, title, question, options, correct_index, explanation, hint,
             approved_at, audit_status, audit_confidence, audit_reason, audit_model, suggested_correct_index
@@ -330,12 +351,12 @@ export class PostgresDatabase {
   async updateDrill(id: string, updates: Partial<DBDrill>): Promise<DBDrill | null> {
     fileDb.updateDrill(id, updates);
 
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileDb.updateDrill(id, updates);
     }
 
     try {
-      await this.pool.query(
+      await this.pool!.query(
         `UPDATE public.drills
          SET question = COALESCE($2, question),
              explanation = COALESCE($3, explanation),
@@ -364,16 +385,16 @@ export class PostgresDatabase {
   async approveAllDrills(sessionId: string = '00000000-0000-0000-0000-000000000001'): Promise<DBDrill[]> {
     fileDb.approveAllDrills('session-default');
 
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileDb.getDrills('session-default');
     }
 
     try {
-      await this.pool.query(
+      await this.pool!.query(
         'UPDATE public.drills SET approved_at = NOW() WHERE session_id = $1;',
         [sessionId]
       );
-      await this.pool.query(
+      await this.pool!.query(
         'UPDATE public.sessions SET is_approved = TRUE, updated_at = NOW() WHERE id = $1;',
         [sessionId]
       );
@@ -388,12 +409,12 @@ export class PostgresDatabase {
   async addFlag(sessionId: string, drillId: string, question: string, studentNote: string): Promise<DBFlaggedTopic> {
     const fileFlag = fileDb.addFlag('session-default', drillId, question, studentNote);
 
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileFlag;
     }
 
     try {
-      const res = await this.pool.query(
+      const res = await this.pool!.query(
         `INSERT INTO public.flagged_topics (session_id, drill_id, question, student_note, status)
          VALUES ($1, $2, $3, $4, 'pending')
          RETURNING id, session_id, drill_id, question, student_note, created_at;`,
@@ -415,12 +436,12 @@ export class PostgresDatabase {
   }
 
   async getFlags(sessionId: string = '00000000-0000-0000-0000-000000000001'): Promise<DBFlaggedTopic[]> {
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileDb.getFlags('session-default');
     }
 
     try {
-      const res = await this.pool.query(
+      const res = await this.pool!.query(
         `SELECT id, session_id, drill_id, question, student_note, created_at
          FROM public.flagged_topics
          WHERE session_id = $1
@@ -461,12 +482,12 @@ export class PostgresDatabase {
       timeSpentSeconds: attempt.timeSpentSeconds
     });
 
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileAttempt;
     }
 
     try {
-      const res = await this.pool.query(
+      const res = await this.pool!.query(
         `INSERT INTO public.drill_attempts (drill_id, learner_id, selected_index, is_correct, time_spent_seconds)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, drill_id, learner_id, selected_index, is_correct, time_spent_seconds, created_at;`,
@@ -496,7 +517,7 @@ export class PostgresDatabase {
   }
 
   async getAttempts(drillId?: string) {
-    if (!this.pool || !this.isConnected) {
+    if (!await this.ensureConnected()) {
       return fileDb.getAttempts(drillId);
     }
 
@@ -510,7 +531,7 @@ export class PostgresDatabase {
       }
       query += ` ORDER BY created_at DESC;`;
 
-      const res = await this.pool.query(query, params);
+      const res = await this.pool!.query(query, params);
       return res.rows.map(r => ({
         id: r.id,
         drillId: r.drill_id,
